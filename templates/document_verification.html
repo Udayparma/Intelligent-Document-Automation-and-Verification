@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DocVerify - Document Verification Center</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+body{
+    background:#f4f7fc;
+    font-family:Arial, sans-serif;
+}
+.navbar{
+    background:#0d6efd;
+}
+.page-title{
+    font-weight:700;
+}
+.stat-card{
+    background:#fff;
+    border-radius:16px;
+    padding:20px;
+    box-shadow:0 5px 18px rgba(0,0,0,.08);
+    height:100%;
+}
+.stat-number{
+    font-size:30px;
+    font-weight:700;
+}
+.document-card{
+    background:#fff;
+    border-radius:18px;
+    padding:24px;
+    margin-bottom:20px;
+    box-shadow:0 5px 20px rgba(0,0,0,.08);
+}
+.check-row{
+    display:flex;
+    justify-content:space-between;
+    gap:15px;
+    padding:10px 0;
+    border-bottom:1px solid #edf0f5;
+}
+.check-row:last-child{
+    border-bottom:0;
+}
+.badge-box{
+    padding:7px 12px;
+    border-radius:20px;
+    font-weight:600;
+}
+.ok{
+    background:#d1e7dd;
+    color:#0f5132;
+}
+.warn{
+    background:#fff3cd;
+    color:#664d03;
+}
+.bad{
+    background:#f8d7da;
+    color:#842029;
+}
+.risk-bar{
+    height:10px;
+    background:#e9ecef;
+    border-radius:10px;
+    overflow:hidden;
+}
+.risk-fill{
+    height:100%;
+}
+.small-muted{
+    color:#6c757d;
+    font-size:13px;
+}
+.reason{
+    background:#fff8e1;
+    border-radius:8px;
+    padding:8px 10px;
+    margin:5px 0;
+    font-size:14px;
+}
+
+
+/* ============================================================
+   ADDED FEATURE: SIGNATURE SECURITY UI
+   ============================================================ */
+.signature-security-panel{
+    background:linear-gradient(135deg,#ffffff,#f7fbff);
+    border:1px solid #dce7f5;
+    border-radius:18px;
+    padding:24px;
+    margin:24px 0;
+    box-shadow:0 5px 20px rgba(0,0,0,.07);
+}
+.signature-security-head{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:18px;
+}
+.signature-security-icon{
+    width:46px;height:46px;border-radius:14px;
+    display:flex;align-items:center;justify-content:center;
+    background:#e7f1ff;color:#0d6efd;font-size:23px;
+}
+.signature-security-title{font-weight:700;margin:0;}
+.signature-security-subtitle{font-size:13px;color:#6c757d;}
+.signature-form-card{
+    background:#fff;border:1px solid #e9edf4;border-radius:14px;padding:18px;height:100%;
+}
+.signature-result-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #edf0f5;font-size:14px;}
+.signature-result-row:last-child{border-bottom:0;}
+.signature-mini-badge{padding:5px 9px;border-radius:14px;font-size:11px;font-weight:700;}
+.signature-mini-ok{background:#d1e7dd;color:#0f5132;}
+.signature-mini-warn{background:#fff3cd;color:#664d03;}
+.signature-mini-bad{background:#f8d7da;color:#842029;}
+.signature-help{font-size:12px;color:#6c757d;margin-top:8px;}
+@media(max-width:768px){
+    .signature-security-panel{padding:17px;}
+}
+
+</style>
+</head>
+
+<body>
+
+<nav class="navbar navbar-dark mb-4">
+    <div class="container">
+        <span class="navbar-brand fw-bold">
+            <i class="bi bi-shield-check me-2"></i>DocVerify
+        </span>
+
+        <div>
+            <a href="/dashboard" class="btn btn-light me-2">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+            <a href="/upload" class="btn btn-outline-light">
+                <i class="bi bi-upload"></i> Upload
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="container pb-5">
+
+    <div class="text-center mb-4">
+        <h1 class="page-title">Document Verification Center</h1>
+        <p class="text-muted">
+            Complete duplicate, similarity, suspicious-information and risk analysis
+            of all uploaded documents.
+        </p>
+    </div>
+
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        <strong>Important:</strong>
+        The system flags possible duplicates and suspicious documents using OCR,
+        content similarity, verification rules and risk indicators.
+        It does not claim to prove forgery without verification from an official
+        issuing authority.
+    </div>
+
+
+    <!-- ==========================================================
+         ADDED FEATURE: SIGNATURE SECURITY CENTER
+         Existing document verification UI remains unchanged.
+         ========================================================== -->
+    <section class="signature-security-panel" id="signatureSecurityPanel">
+        <div class="signature-security-head">
+            <div class="signature-security-icon">
+                <i class="bi bi-pen-fill"></i>
+            </div>
+            <div>
+                <h3 class="signature-security-title">Signature Security Center</h3>
+                <div class="signature-security-subtitle">
+                    Register genuine signature samples and compare submitted signatures for similarity.
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-warning py-2 small">
+            <i class="bi bi-shield-exclamation me-1"></i>
+            This is a project-level similarity screening system, not a legal proof of authenticity.
+            Keep multiple genuine samples and review borderline results manually.
+        </div>
+
+        <div class="row g-3">
+            <div class="col-lg-6">
+                <div class="signature-form-card">
+                    <h5><i class="bi bi-person-badge me-2"></i>Register Genuine Signature</h5>
+                    <p class="signature-help">Upload 3–5 clear genuine samples of the same person's signature.</p>
+                    <form action="/signature/register" method="POST" enctype="multipart/form-data">
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Person Name</label>
+                            <input type="text" name="person_name" class="form-control" required placeholder="e.g. Rahul Sharma">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Unique ID</label>
+                            <input type="text" name="person_identifier" class="form-control" required placeholder="e.g. EMP-1024 / STUD-1024">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">3–5 Genuine Samples</label>
+                            <input type="file" name="signature_samples" class="form-control" accept="image/png,image/jpeg,image/webp" multiple required>
+                        </div>
+                        <button class="btn btn-primary w-100" type="submit">
+                            <i class="bi bi-shield-plus me-1"></i> Register Genuine Profile
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="signature-form-card">
+                    <h5><i class="bi bi-search me-2"></i>Verify Submitted Signature</h5>
+                    <p class="signature-help">Choose a registered person and upload the signature that needs checking.</p>
+                    <form action="/signature/verify" method="POST" enctype="multipart/form-data">
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Registered Person</label>
+                            <select name="profile_id" class="form-select" required>
+                                <option value="">Select registered profile</option>
+                                {% for profile in signature_profiles|default([]) %}
+                                    <option value="{{ profile.id }}">
+                                        {{ profile.person_name }} — {{ profile.person_identifier }} ({{ profile.sample_count }} samples)
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Related Document (Optional)</label>
+                            <select name="document_id" class="form-select">
+                                <option value="">No document selected</option>
+                                {% for doc in documents|default([]) %}
+                                    <option value="{{ doc.id }}">#{{ doc.id }} — {{ doc.filename }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Submitted Signature</label>
+                            <input type="file" name="submitted_signature" class="form-control" accept="image/png,image/jpeg,image/webp" required>
+                        </div>
+                        <button class="btn btn-dark w-100" type="submit">
+                            <i class="bi bi-fingerprint me-1"></i> Check Signature
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <h6 class="mb-2"><i class="bi bi-clock-history me-1"></i>Recent Signature Checks</h6>
+            <div id="signatureRecentChecks" class="small-muted">Loading signature security data...</div>
+        </div>
+    </section>
+
+    
+    <!-- ==========================================================
+         ADDED FEATURE: DOCUMENT-LINKED SIGNATURE FORGERY CHECK
+         Existing verification center remains unchanged.
+         ========================================================== -->
+    <section class="signature-security-panel" id="documentSignatureCheck">
+        <div class="signature-security-head">
+            <div class="signature-security-icon">
+                <i class="bi bi-fingerprint"></i>
+            </div>
+            <div>
+                <h3 class="signature-security-title">Document Signature Forgery Check</h3>
+                <div class="signature-security-subtitle">
+                    Compare a submitted signature with the registered genuine samples of a person.
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-info py-2 small">
+            <i class="bi bi-info-circle me-1"></i>
+            Upload a clear cropped signature image. The result is a similarity-based screening:
+            <strong>Verified</strong>, <strong>Manual Review</strong>, or
+            <strong>Possible Forgery</strong>.
+        </div>
+
+        <form action="/signature/verify" method="POST" enctype="multipart/form-data">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Registered Person</label>
+                    <select name="profile_id" class="form-select" required>
+                        <option value="">Select person</option>
+                        {% for profile in signature_profiles|default([]) %}
+                            <option value="{{ profile.id }}">
+                                {{ profile.person_name }} — {{ profile.person_identifier }}
+                                ({{ profile.sample_count }} genuine samples)
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Document to Check</label>
+                    <select name="document_id" id="signatureDocumentSelect" class="form-select">
+                        <option value="">No document selected</option>
+                        {% for doc in documents|default([]) %}
+                            <option value="{{ doc.id }}">
+                                #{{ doc.id }} — {{ doc.filename }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Submitted Signature</label>
+                    <input type="file" name="submitted_signature"
+                           class="form-control"
+                           accept="image/png,image/jpeg,image/webp"
+                           required>
+                </div>
+            </div>
+
+            <button class="btn btn-dark mt-3" type="submit">
+                <i class="bi bi-shield-check me-1"></i>
+                Detect Signature Forgery
+            </button>
+        </form>
+
+        <div class="signature-help">
+            Tip: use a clean signature crop with minimal background/noise. For stronger
+            project-level comparison, keep 3–5 genuine reference samples for each person.
+        </div>
+    </section>
+
+<!-- SUMMARY -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="small-muted">Total Documents</div>
+                <div class="stat-number">{{ counts.total }}</div>
+                <i class="bi bi-files text-primary fs-3"></i>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="small-muted">Duplicate Documents</div>
+                <div class="stat-number text-danger">{{ counts.duplicate }}</div>
+                <i class="bi bi-copy text-danger fs-3"></i>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="small-muted">Suspicious Documents</div>
+                <div class="stat-number text-warning">{{ counts.suspicious }}</div>
+                <i class="bi bi-exclamation-triangle text-warning fs-3"></i>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="small-muted">No Major Suspicion</div>
+                <div class="stat-number text-success">{{ counts.safe }}</div>
+                <i class="bi bi-shield-check text-success fs-3"></i>
+            </div>
+        </div>
+
+    </div>
+
+    {% if not documents %}
+
+        <div class="document-card text-center py-5">
+            <i class="bi bi-file-earmark-x fs-1 text-muted"></i>
+            <h4 class="mt-3">No documents uploaded</h4>
+            <p class="text-muted">
+                Upload a document first to start verification analysis.
+            </p>
+            <a href="/upload" class="btn btn-primary">
+                Upload Document
+            </a>
+        </div>
+
+    {% else %}
+
+        <h3 class="mb-3">
+            <i class="bi bi-list-check me-2"></i>
+            Complete Document List
+        </h3>
+
+        {% for doc in documents %}
+
+        <div class="document-card">
+
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+
+                <div>
+                    <h4 class="mb-1">
+                        <i class="bi bi-file-earmark-text me-2"></i>
+                        {{ doc.filename }}
+                    </h4>
+
+                    <div class="small-muted">
+                        Type: <strong>{{ doc.document_type or "Unknown" }}</strong>
+                        &nbsp; | &nbsp;
+                        Uploaded: {{ doc.upload_date }}
+                        &nbsp; | &nbsp;
+                        OCR Confidence: {{ doc.confidence_score or 0 }}%
+                    </div>
+                </div>
+
+                {% if doc.result_class == "success" %}
+                    <span class="badge-box ok">
+                        <i class="bi bi-check-circle me-1"></i>
+                        {{ doc.final_result }}
+                    </span>
+                {% elif doc.result_class == "warning" %}
+                    <span class="badge-box warn">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        {{ doc.final_result }}
+                    </span>
+                {% else %}
+                    <span class="badge-box bad">
+                        <i class="bi bi-x-circle me-1"></i>
+                        {{ doc.final_result }}
+                    </span>
+                {% endif %}
+
+            </div>
+
+            <hr>
+
+            <div class="row">
+
+                <div class="col-md-7">
+
+                    <h5 class="mb-3">Verification Checks</h5>
+
+                    <div class="check-row">
+                        <span>
+                            <i class="bi bi-copy me-2"></i>
+                            Exact Duplicate
+                        </span>
+
+                        {% if doc.exact_duplicate %}
+                            <span class="badge-box bad">
+                                <i class="bi bi-x-circle"></i>
+                                Duplicate
+                            </span>
+                        {% else %}
+                            <span class="badge-box ok">
+                                <i class="bi bi-check-circle"></i>
+                                Not Duplicate
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="check-row">
+                        <span>
+                            <i class="bi bi-files me-2"></i>
+                            Content Similarity
+                        </span>
+
+                        {% if doc.similarity >= 85 %}
+                            <span class="badge-box bad">
+                                {{ "%.0f"|format(doc.similarity) }}% - Very High
+                            </span>
+                        {% elif doc.similarity >= 70 %}
+                            <span class="badge-box warn">
+                                {{ "%.0f"|format(doc.similarity) }}% - High
+                            </span>
+                        {% else %}
+                            <span class="badge-box ok">
+                                {{ "%.0f"|format(doc.similarity) }}% - Normal
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="check-row">
+                        <span>
+                            <i class="bi bi-person-vcard me-2"></i>
+                            Information Consistency
+                        </span>
+
+                        {% if doc.information_issue %}
+                            <span class="badge-box bad">
+                                <i class="bi bi-exclamation-circle"></i>
+                                Suspicious
+                            </span>
+                        {% else %}
+                            <span class="badge-box ok">
+                                <i class="bi bi-check-circle"></i>
+                                No Major Issue
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="check-row">
+                        <span>
+                            <i class="bi bi-pencil-square me-2"></i>
+                            Tampering Indicator
+                        </span>
+
+                        {% if doc.tampering_indicator %}
+                            <span class="badge-box warn">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                Possible
+                            </span>
+                        {% else %}
+                            <span class="badge-box ok">
+                                <i class="bi bi-check-circle"></i>
+                                Not Detected
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="check-row">
+                        <span>
+                            <i class="bi bi-clipboard-check me-2"></i>
+                            Existing Verification
+                        </span>
+
+                        {% if doc.verification_status == "Verified" %}
+                            <span class="badge-box ok">
+                                {{ doc.verification_status }}
+                            </span>
+                        {% else %}
+                            <span class="badge-box warn">
+                                {{ doc.verification_status }}
+                            </span>
+                        {% endif %}
+                    </div>
+
+                </div>
+
+                <div class="col-md-5 mt-4 mt-md-0">
+
+                    <h5 class="mb-3">Risk Analysis</h5>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <strong>Risk Score</strong>
+                        <strong>{{ "%.0f"|format(doc.risk_score) }}%</strong>
+                    </div>
+
+                    <div class="risk-bar mb-2">
+                        {% if doc.risk_score >= 60 %}
+                            <div class="risk-fill bg-danger"
+                                 style="width:{{ doc.risk_score }}%;"></div>
+                        {% elif doc.risk_score >= 30 %}
+                            <div class="risk-fill bg-warning"
+                                 style="width:{{ doc.risk_score }}%;"></div>
+                        {% else %}
+                            <div class="risk-fill bg-success"
+                                 style="width:{{ doc.risk_score }}%;"></div>
+                        {% endif %}
+                    </div>
+
+                    {% if doc.risk_level == "High Risk" %}
+                        <span class="badge bg-danger">
+                            High Risk
+                        </span>
+                    {% elif doc.risk_level == "Medium Risk" %}
+                        <span class="badge bg-warning text-dark">
+                            Medium Risk
+                        </span>
+                    {% else %}
+                        <span class="badge bg-success">
+                            Low Risk
+                        </span>
+                    {% endif %}
+
+                    <div class="mt-3">
+                        <strong>Final Result</strong>
+
+                        {% if doc.result_class == "success" %}
+                            <div class="alert alert-success mt-2 mb-0">
+                                <i class="bi bi-shield-check me-2"></i>
+                                {{ doc.final_result }}
+                            </div>
+                        {% elif doc.result_class == "warning" %}
+                            <div class="alert alert-warning mt-2 mb-0">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                {{ doc.final_result }}
+                            </div>
+                        {% else %}
+                            <div class="alert alert-danger mt-2 mb-0">
+                                <i class="bi bi-shield-exclamation me-2"></i>
+                                {{ doc.final_result }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                </div>
+
+            </div>
+
+            {% if doc.duplicate_of %}
+                <div class="alert alert-danger mt-4 mb-0">
+                    <i class="bi bi-copy me-2"></i>
+                    This document is a duplicate of document
+                    <strong>#{{ doc.duplicate_of }}</strong>.
+                </div>
+            {% endif %}
+
+            {% if doc.similar_document_id and doc.similarity >= 70 %}
+                <div class="alert alert-warning mt-3 mb-0">
+                    <i class="bi bi-files me-2"></i>
+                    Highest content similarity:
+                    <strong>{{ "%.0f"|format(doc.similarity) }}%</strong>
+                    with document
+                    <strong>#{{ doc.similar_document_id }}</strong>.
+                </div>
+            {% endif %}
+
+            {% if doc.suspicious_reasons %}
+                <div class="mt-4">
+                    <h6>
+                        <i class="bi bi-search me-2"></i>
+                        Reasons / Indicators
+                    </h6>
+
+                    {% for reason in doc.suspicious_reasons %}
+                        <div class="reason">
+                            <i class="bi bi-dot"></i>
+                            {{ reason }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+        </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+</div>
+
+
+<script>
+/* ============================================================
+   ADDED FEATURE: SIGNATURE SECURITY SUMMARY
+   ============================================================ */
+document.addEventListener("DOMContentLoaded", function () {
+    const box = document.getElementById("signatureRecentChecks");
+    if (!box) return;
+
+    fetch("/api/signature-summary", {cache:"no-store"})
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                box.textContent = "Login required to view signature security data.";
+                return;
+            }
+            if (!data.engine_available) {
+                box.innerHTML = '<span class="signature-mini-badge signature-mini-warn">Engine not installed</span> Install OpenCV + NumPy to enable signature comparison.';
+                return;
+            }
+            const recent = Array.isArray(data.recent) ? data.recent : [];
+            if (!recent.length) {
+                box.innerHTML = 'No signature checks yet. Register genuine samples above to create a signature profile.';
+                return;
+            }
+            box.innerHTML = recent.map(item => {
+                let cls = "signature-mini-warn";
+                if (item.result === "SIGNATURE VERIFIED") cls = "signature-mini-ok";
+                if (item.result === "POSSIBLE FORGED SIGNATURE") cls = "signature-mini-bad";
+                return `<div class="signature-result-row">
+                    <span><strong>${String(item.person_name || "Unknown")}</strong> · ${String(item.person_identifier || "")}</span>
+                    <span><span class="signature-mini-badge ${cls}">${String(item.result || "Review")}</span> ${Number(item.similarity_score || 0).toFixed(1)}%</span>
+                </div>`;
+            }).join("");
+        })
+        .catch(() => {
+            box.textContent = "Unable to load signature security data.";
+        });
+});
+</script>
+
+</body>
+</html>

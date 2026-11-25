@@ -1,0 +1,4251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DocVerify | Dashboard</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+/* ============================================================
+   EXTRA FEATURE: notification/profile dropdown behavior
+   ============================================================ */
+document.addEventListener("DOMContentLoaded", function () {
+    const notificationButton = document.getElementById("notificationButton");
+    const notificationDropdown = document.getElementById("notificationDropdown");
+    const profileButton = document.getElementById("profileButton");
+    const profileDropdown = document.getElementById("profileDropdown");
+
+    function closeAll() {
+        if (notificationDropdown) notificationDropdown.classList.remove("show");
+        if (profileDropdown) profileDropdown.classList.remove("show");
+        if (profileButton) profileButton.classList.remove("open");
+    }
+
+    if (notificationButton && notificationDropdown) {
+        notificationButton.addEventListener("click", function (event) {
+            event.stopPropagation();
+            const wasOpen = notificationDropdown.classList.contains("show");
+            closeAll();
+            if (!wasOpen) notificationDropdown.classList.add("show");
+        });
+    }
+
+    if (profileButton && profileDropdown) {
+        profileButton.addEventListener("click", function (event) {
+            event.stopPropagation();
+            const wasOpen = profileDropdown.classList.contains("show");
+            closeAll();
+            if (!wasOpen) {
+                profileDropdown.classList.add("show");
+                profileButton.classList.add("open");
+            }
+        });
+    }
+
+    document.addEventListener("click", function (event) {
+        if (!event.target.closest(".notification-wrap") &&
+            !event.target.closest(".profile-wrap")) {
+            closeAll();
+        }
+    });
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") closeAll();
+    });
+
+    // Re-open profile after a successful profile save so the user can immediately see the update.
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            if (profileDropdown && profileButton) {
+                profileDropdown.classList.add("show");
+                profileButton.classList.add("open");
+            }
+        {% endif %}
+    {% endwith %}
+});
+
+</script>
+
+<style>
+:root{
+    --bg:#f5f7fb;
+    --card:#fff;
+    --primary:#635bff;
+    --text:#172033;
+    --muted:#7c8498;
+    --border:#e9ecf3;
+}
+*{box-sizing:border-box}
+body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    overflow-x:hidden;
+}
+a{text-decoration:none}
+.sidebar{
+    position:fixed;left:0;top:0;width:250px;height:100vh;
+    background:linear-gradient(160deg,#171b3a,#11152e 55%,#0d1024);
+    color:#fff;padding:26px 18px;z-index:1000;
+}
+.brand{display:flex;align-items:center;gap:12px;padding:0 10px;margin-bottom:42px}
+.brand-icon{
+    width:42px;height:42px;border-radius:13px;display:flex;
+    align-items:center;justify-content:center;
+    background:linear-gradient(135deg,#7c73ff,#4f46e5);
+}
+.brand-name{font-size:19px;font-weight:700}
+.brand-name span{color:#8f8aff}
+.menu-label{
+    color:#707895;font-size:10px;text-transform:uppercase;
+    letter-spacing:1.4px;padding:0 13px;margin-bottom:10px
+}
+.sidebar-menu{list-style:none;margin:0;padding:0}
+.sidebar-menu li{margin-bottom:5px}
+.sidebar-menu a{
+    color:#a9afc4;display:flex;align-items:center;gap:13px;
+    padding:12px 13px;border-radius:11px;font-size:14px
+}
+.sidebar-menu a:hover,.sidebar-menu a.active{
+    background:rgba(99,91,255,.18);color:#fff
+}
+.sidebar-bottom{position:absolute;left:18px;right:18px;bottom:22px}
+.security-card{
+    padding:15px;border:1px solid rgba(255,255,255,.08);
+    background:rgba(255,255,255,.045);border-radius:13px
+}
+.security-icon{color:#6ee7b7}
+.security-title{font-size:12px;font-weight:600;color:#d7dbea}
+.security-text{color:#727a96;font-size:10px;margin-top:2px}
+.main{
+    margin-left:250px;
+    min-height:100vh;
+    width:calc(100% - 250px);
+    min-width:0;
+    overflow-x:hidden;
+}
+.topbar{
+    height:86px;
+    background:linear-gradient(
+        135deg,
+        #171b3a 0%,
+        #11152e 55%,
+        #0d1024 100%
+    );
+
+    border-bottom:1px solid rgba(255,255,255,.08);
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    padding:0 34px;
+
+    position:sticky;
+    top:0;
+    z-index:500;
+
+    box-shadow:
+        0 8px 25px rgba(13,16,36,.18);
+}
+.top-title{
+    margin:0;
+
+    font-size:24px;
+    font-weight:750;
+
+    letter-spacing:-.5px;
+
+    color:#fcfbfb;
+
+    line-height:1.2;
+}
+
+.top-subtitle{
+    margin-top:5px;
+
+    color:rgba(253, 248, 248, 0.947);
+
+    font-size:11px;
+
+    font-weight:500;
+
+    letter-spacing:.2px;
+}
+
+.top-subtitle::before{
+    content:"●";
+    color:#6ee7b7;
+    font-size:7px;
+
+    margin-right:7px;
+
+    vertical-align:middle;
+}
+.page-heading{
+    display:flex;
+    align-items:center;
+    gap:13px;
+}
+
+.heading-icon{
+    width:42px;
+    height:42px;
+    border-radius:12px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    color:#ffffff;
+
+    background:linear-gradient(
+        135deg,
+        rgba(124,115,255,.95),
+        rgba(79,70,229,.85)
+    );
+
+    border:1px solid rgba(255,255,255,.15);
+
+    box-shadow:
+        0 7px 20px rgba(79,70,229,.30);
+
+    font-size:16px;
+}
+.top-right{display:flex;align-items:center;gap:18px}
+.notification{
+    width:40px;
+    height:40px;
+
+    border-radius:12px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    color:rgba(255,255,255,.75);
+
+    background:rgba(255,255,255,.07);
+
+    border:1px solid rgba(255,255,255,.10);
+
+    transition:.25s;
+}
+
+.notification:hover{
+    background:rgba(255,255,255,.13);
+    color:#ffffff;
+
+    transform:translateY(-2px);
+
+    box-shadow:
+        0 8px 20px rgba(0,0,0,.15);
+}
+.user{display:flex;align-items:center;gap:10px}
+.avatar{
+    width:40px;
+    height:40px;
+
+    border-radius:50%;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:linear-gradient(
+        135deg,
+        #7c73ff,
+        #4f46e5
+    );
+
+    color:#ffffff;
+
+    font-size:14px;
+    font-weight:750;
+
+    border:2px solid rgba(255,255,255,.18);
+
+    box-shadow:
+        0 5px 15px rgba(79,70,229,.35);
+}
+.user-info strong{
+    display:block;
+    font-size:13px;
+    font-weight:700;
+    color:#ffffff;
+}
+
+.user-info small{
+    color:rgba(255,255,255,.55);
+    font-size:10px;
+}
+.content{padding:30px 34px 45px}
+.welcome{
+    border-radius:20px;padding:29px 32px;color:#fff;
+    background:linear-gradient(110deg,#5148d8,#7168ef 55%,#857ef7);
+    box-shadow:0 16px 35px rgba(82,73,216,.18);margin-bottom:25px
+}
+.welcome h2{margin:0;font-size:25px;font-weight:700}
+.welcome p{margin:7px 0 0;color:rgba(255,255,255,.78);font-size:13px}
+.upload-btn{
+    display:inline-flex;align-items:center;gap:8px;color:#4f46e5;
+    background:#fff;padding:11px 18px;border-radius:10px;font-size:13px;font-weight:700
+}
+/* =========================================
+   DASHBOARD STAT CARDS
+   ========================================= */
+
+/* =========================================
+   STATISTICS CARDS
+   ========================================= */
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-bottom: 30px;
+}
+
+
+/* =========================================
+   COMMON CARD
+   ========================================= */
+
+.stat-card {
+    min-height: 180px;
+    padding: 24px;
+
+    border-radius: 18px;
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: space-between;
+
+    border: 1px solid rgba(255, 255, 255, 0.15);
+
+    color: #ffffff;
+
+    overflow: hidden;
+
+    transition: 0.25s ease;
+}
+
+
+/* Hover */
+
+.stat-card:hover {
+    transform: translateY(-4px);
+
+    box-shadow:
+        0 12px 30px rgba(0, 0, 0, 0.20);
+}
+
+
+/* =========================================
+   CARD BACKGROUND COLORS
+   ========================================= */
+
+/* Total Documents */
+
+.stat-card:nth-child(1) {
+    background: linear-gradient(
+        135deg,
+        #0d47a1,
+        #1565c0
+    );
+}
+
+
+/* Verified Documents */
+
+.stat-card:nth-child(2) {
+    background: linear-gradient(
+        135deg,
+        #064e3b,
+        #059669
+    );
+}
+
+
+/* Rejected Documents */
+
+.stat-card:nth-child(3) {
+    background: linear-gradient(
+        135deg,
+        #7f1d1d,
+        #b91c1c
+    );
+}
+
+
+/* Average Confidence */
+
+.stat-card:nth-child(4) {
+    background: linear-gradient(
+        135deg,
+        #312e81,
+        #6d28d9
+    );
+}
+
+
+/* =========================================
+   ICON
+   ========================================= */
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+
+    border-radius: 12px;
+
+    background: #ffffff !important;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 20px;
+
+    margin-bottom: 12px;
+}
+
+
+/* Icon colors */
+
+.stat-icon.blue {
+    color: #1565c0 !important;
+}
+
+.stat-icon.green {
+    color: #059669 !important;
+}
+
+.stat-icon.red {
+    color: #b91c1c !important;
+}
+
+.stat-icon.yellow {
+    color: #6d28d9 !important;
+}
+
+
+/* =========================================
+   CARD TITLE
+   ========================================= */
+
+.stat-label {
+    color: #ffffff !important;
+
+    font-size: 18px !important;
+
+    font-weight: 700 !important;
+
+    line-height: 1.3;
+
+    margin: 0 0 6px 0;
+}
+
+
+/* =========================================
+   BIG NUMBER
+   ========================================= */
+
+.stat-number {
+    color: #ffffff !important;
+
+    font-size: 38px !important;
+
+    font-weight: 800 !important;
+
+    line-height: 1.1;
+
+    margin: 0;
+}
+
+
+/* =========================================
+   BOTTOM TEXT
+   ========================================= */
+
+.stat-bottom {
+    color: rgba(255, 255, 255, 0.90) !important;
+
+    font-size: 13px !important;
+
+    font-weight: 500;
+
+    margin-top: 6px;
+}
+
+
+/* =========================================
+   RESPONSIVE
+   ========================================= */
+
+@media (max-width: 1000px) {
+
+    .stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .stats {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-card {
+        min-height: 160px;
+    }
+
+}
+
+}
+.stat-icon{
+    width:42px;height:42px;border-radius:11px;display:flex;
+    align-items:center;justify-content:center;font-size:18px
+}
+.blue{background:#efefff;color:#635bff}
+.green{background:#eaf9f0;color:#16a34a}
+.gold{
+    background:#fff8e6;
+    color:#d99a00;
+}
+.red{background:#fff0f1;color:#ef4444}
+.yellow{background:#fff7e6;color:#f59e0b}
+.stat-label{color:var(--muted);font-size:12px;margin-top:17px}
+.stat-number{font-size:27px;font-weight:750;margin-top:3px}
+.stat-bottom{color:#98a0b2;font-size:10px}
+.analytics{display:grid;grid-template-columns:1.35fr .8fr;gap:18px;margin-bottom:24px}
+.panel{
+    background:#fff;border:1px solid var(--border);border-radius:16px;padding:21px
+}
+.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:17px}
+.panel-title{font-size:14px;font-weight:700;margin:0}
+.panel-subtitle{color:var(--muted);font-size:10px}
+.chart-wrap{height:240px}
+.types{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:24px}
+.type{
+    background:#fff;border:1px solid var(--border);border-radius:14px;
+    padding:16px;display:flex;align-items:center;gap:13px
+}
+.type-icon{
+    width:42px;height:42px;border-radius:11px;display:flex;
+    align-items:center;justify-content:center;font-size:18px
+}
+.type h6{margin:0;font-size:11px;color:var(--muted)}
+.type h3{margin:2px 0 0;font-size:21px}
+.search-panel{
+    background:#fff;border:1px solid var(--border);border-radius:16px;
+    padding:18px 20px;margin-bottom:18px
+}
+.search-title{font-size:14px;font-weight:700}
+.search-sub{color:var(--muted);font-size:10px}
+.search-input{position:relative}
+.search-input i{position:absolute;left:14px;top:13px;color:#9aa2b2}
+.search-input input{height:43px;padding-left:39px;border:1px solid var(--border);border-radius:9px;font-size:12px}
+.documents{
+    background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden
+}
+.documents-head{
+    padding:20px;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between
+}
+.documents-title{margin:0;font-size:15px;font-weight:700}
+.documents-sub{color:var(--muted);font-size:10px}
+.count-badge{
+    padding:7px 11px;border-radius:20px;background:#efefff;
+    color:#5b54dd;font-size:10px;font-weight:700
+}
+.table{margin:0}
+.table thead th{
+    border:0;background:#fafbfc;color:#8a92a4;text-transform:uppercase;
+    letter-spacing:.5px;font-size:9px;padding:13px 17px;white-space:nowrap
+}
+.table tbody td{padding:15px 17px;border-color:#f0f1f5;vertical-align:middle;font-size:11px}
+.file{display:flex;align-items:center;gap:10px}
+.file-icon{
+    width:35px;height:35px;border-radius:9px;display:flex;
+    align-items:center;justify-content:center;background:#f0efff;color:#635bff
+}
+.file-name{font-weight:650;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-id{display:block;color:#a0a7b5;font-size:9px}
+.status{display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border-radius:20px;font-size:9px;font-weight:700}
+.verified{color:#15803d;background:#ecfdf3}
+.rejected{color:#dc2626;background:#fff1f2}
+.confidence{width:100px}
+.confidence-number{font-size:10px;font-weight:700}
+.progress{height:5px;background:#edf0f5;margin-top:5px;border-radius:10px}
+.progress-bar{border-radius:10px}
+.action{
+    width:31px;height:31px;display:inline-flex;align-items:center;
+    justify-content:center;border-radius:8px;color:#7a8294;
+    background:#f8f9fb;border:1px solid #edf0f3;margin-right:3px
+}
+.action:hover{color:#635bff;background:#efefff}
+.delete:hover{color:#ef4444;background:#fff1f2}
+.empty{text-align:center;padding:55px 20px}
+.skill-panel{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:22px;
+    margin-bottom:24px;
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    box-sizing:border-box;
+    overflow:hidden;
+}
+.skill-header{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+.skill-header i{
+    width:40px;height:40px;border-radius:11px;display:flex;
+    align-items:center;justify-content:center;background:#efefff;color:#635bff
+}
+.skill-title{font-size:15px;font-weight:700;margin:0}
+.skill-subtitle{font-size:10px;color:var(--muted)}
+.skill-form input{height:43px;font-size:12px}
+.skill-results{
+    margin-top:18px;
+    width:100%;
+    max-width:100%;
+    box-sizing:border-box;
+    overflow:hidden;
+}
+
+.skill-results-grid{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:14px;
+    box-sizing:border-box;
+    overflow:hidden;
+}
+
+.skill-result{
+    width:100%;
+    min-width:0;
+    max-width:100%;
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    gap:12px;
+    margin:0;
+    box-sizing:border-box;
+    overflow:hidden;
+    background:#fff;
+}
+
+.skill-result-info{
+    width:100%;
+    min-width:0;
+    overflow:hidden;
+}
+
+.skill-result-filename{
+    font-size:12px;
+    font-weight:600;
+    display:block;
+    width:100%;
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+.skill-result-meta{
+    font-size:9px;
+    color:#8b93a4;
+    margin-top:5px;
+}
+
+.skill-result-meta strong{
+    color:#667085;
+}
+
+.skill-result-bottom{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.skill-result-status{
+    min-width:0;
+}
+
+.skill-status-list{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+    width:100%;
+}
+
+.skill-status-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:7px 10px;
+    border-radius:9px;
+    font-size:10px;
+    font-weight:700;
+}
+
+.skill-status-item strong{
+    font-size:9px;
+    white-space:nowrap;
+}
+
+.skill-status-found{
+    color:#15803d;
+    background:#ecfdf3;
+    border:1px solid #d1fae5;
+}
+
+.skill-status-missing{
+    color:#dc2626;
+    background:#fff1f2;
+    border:1px solid #ffe4e6;
+}
+
+.skill-found{
+    color:#15803d;
+    background:#ecfdf3;
+    padding:6px 10px;
+    border-radius:20px;
+    font-size:10px;
+    font-weight:700;
+    display:inline-flex;
+    align-items:center;
+    white-space:nowrap;
+}
+
+.skill-missing{
+    color:#dc2626;
+    background:#fff1f2;
+    padding:6px 10px;
+    border-radius:20px;
+    font-size:10px;
+    font-weight:700;
+}
+
+.match-score{
+    font-weight:800;
+    font-size:16px;
+    color:#635bff;
+}
+
+.match-skill{
+    display:inline-block;
+    background:#f2f1ff;
+    color:#5b54dd;
+    border-radius:15px;
+    padding:4px 8px;
+    font-size:9px;
+    margin:2px;
+}
+
+.missing-skill{
+    display:inline-block;
+    background:#fff1f2;
+    color:#dc2626;
+    border-radius:15px;
+    padding:4px 8px;
+    font-size:9px;
+    margin:2px;
+}
+
+@media(max-width:1100px){
+
+    .skill-results-grid{
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+@media(max-width:650px){
+
+    .skill-results-grid{
+        grid-template-columns:1fr;
+    }
+
+}
+@media(max-width:1100px){
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .analytics{grid-template-columns:1fr}
+}
+
+/* ============================================================
+   JOB DESCRIPTION MATCHER
+   ============================================================ */
+.job-match-panel{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:22px;
+    margin-bottom:24px;
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    box-sizing:border-box;
+    overflow:hidden;
+}
+.job-match-header{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:4px;
+}
+.job-match-header i{
+    width:40px;
+    height:40px;
+    border-radius:11px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#efefff;
+    color:#635bff;
+}
+.job-match-title{
+    font-size:15px;
+    font-weight:700;
+    margin:0;
+}
+.job-match-subtitle{
+    font-size:10px;
+    color:var(--muted);
+}
+.job-match-form textarea{
+    min-height:100px;
+    resize:vertical;
+    font-size:12px;
+    border:1px solid var(--border);
+    border-radius:10px;
+}
+.job-match-results{
+    margin-top:20px;
+    width:100%;
+    overflow-x:auto;
+}
+.job-match-table{
+    min-width:760px;
+}
+.job-rank{
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    background:#efefff;
+    color:#5b54dd;
+    font-weight:800;
+    font-size:11px;
+}
+.job-score{
+    font-size:17px;
+    font-weight:800;
+    color:#635bff;
+}
+.job-score-small{
+    font-size:10px;
+    color:#667085;
+}
+.job-pill{
+    display:inline-block;
+    padding:4px 8px;
+    margin:2px;
+    border-radius:15px;
+    font-size:9px;
+    font-weight:700;
+}
+.job-pill-found{
+    background:#ecfdf3;
+    color:#15803d;
+}
+.job-pill-missing{
+    background:#fff1f2;
+    color:#dc2626;
+}
+.job-recommendation{
+    font-size:10px;
+    color:#667085;
+    line-height:1.5;
+    max-width:220px;
+}
+.job-skill-summary{
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+    margin-top:8px;
+}
+.job-empty{
+    padding:18px;
+    border-radius:10px;
+    background:#f8f9fb;
+    color:#7c8498;
+    font-size:11px;
+}
+
+@media(max-width:768px){
+    .sidebar{width:70px;padding:22px 10px}
+    .brand{justify-content:center;padding:0}
+    .brand-name,.sidebar-menu span,.menu-label,.security-card{display:none}
+    .sidebar-menu a{justify-content:center}
+    .main{
+    margin-left:70px;
+    width:calc(100% - 70px);
+    max-width:none;
+}
+    .topbar{padding:0 18px}
+    .user-info,.notification{display:none}
+    .content{padding:20px 15px}
+    .stats,.types{grid-template-columns:1fr}
+}
+
+/* ============================================================
+   EXTRA FEATURE: NOTIFICATION + PROFILE DROPDOWNS
+   Existing dashboard styles remain unchanged.
+   ============================================================ */
+.top-right .notification-wrap,
+.top-right .profile-wrap{
+    position:relative;
+}
+.top-right .notification,
+.top-right .profile-trigger{
+    cursor:pointer;
+}
+.top-right .profile-trigger{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:transparent;
+    border:0;
+    padding:0;
+    color:inherit;
+}
+.profile-chevron{
+    color:rgba(255,255,255,.55);
+    font-size:11px;
+    transition:.2s ease;
+}
+.profile-trigger.open .profile-chevron{
+    transform:rotate(180deg);
+}
+.extra-dropdown{
+    position:absolute;
+    top:calc(100% + 12px);
+    right:0;
+    width:320px;
+    background:#fff;
+    color:#172033;
+    border:1px solid #e9ecf3;
+    border-radius:15px;
+    box-shadow:0 18px 45px rgba(15,23,42,.18);
+    z-index:2000;
+    display:none;
+    overflow:hidden;
+}
+.extra-dropdown.show{
+    display:block;
+    animation:extraDropIn .16s ease-out;
+}
+@keyframes extraDropIn{
+    from{opacity:0;transform:translateY(-5px)}
+    to{opacity:1;transform:translateY(0)}
+}
+.extra-dropdown-head{
+    padding:15px 17px;
+    border-bottom:1px solid #eef0f4;
+}
+.extra-dropdown-title{
+    font-size:13px;
+    font-weight:750;
+    margin:0;
+}
+.extra-dropdown-sub{
+    font-size:10px;
+    color:#8a92a4;
+    margin-top:3px;
+}
+.notification-list{
+    max-height:330px;
+    overflow-y:auto;
+}
+.extra-notification-item{
+    display:flex;
+    gap:11px;
+    padding:12px 15px;
+    color:#172033;
+    border-bottom:1px solid #f1f2f5;
+    transition:.15s;
+}
+.extra-notification-item:hover{
+    background:#f8f9ff;
+}
+.extra-notification-icon{
+    width:34px;
+    height:34px;
+    flex:0 0 34px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#efefff;
+    color:#635bff;
+}
+.extra-notification-icon.success{
+    background:#ecfdf3;
+    color:#15803d;
+}
+.extra-notification-icon.danger{
+    background:#fff1f2;
+    color:#dc2626;
+}
+.extra-notification-text{
+    min-width:0;
+}
+.extra-notification-text strong{
+    display:block;
+    font-size:10px;
+    font-weight:750;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+.extra-notification-text span{
+    display:block;
+    color:#8a92a4;
+    font-size:9px;
+    margin-top:3px;
+}
+.extra-notification-empty{
+    padding:28px 18px;
+    text-align:center;
+    color:#8a92a4;
+    font-size:10px;
+}
+.extra-profile-head{
+    padding:18px;
+    background:linear-gradient(135deg,#171b3a,#11152e);
+    color:#fff;
+}
+.extra-profile-main{
+    display:flex;
+    align-items:center;
+    gap:11px;
+}
+.extra-profile-avatar{
+    width:43px;
+    height:43px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(135deg,#7c73ff,#4f46e5);
+    color:#fff;
+    font-weight:800;
+}
+.extra-profile-name{
+    font-size:13px;
+    font-weight:750;
+}
+.extra-profile-role{
+    font-size:9px;
+    color:rgba(255,255,255,.62);
+    margin-top:2px;
+}
+.extra-profile-body{
+    padding:12px 15px;
+}
+.extra-profile-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:15px;
+    padding:9px 2px;
+    border-bottom:1px solid #f1f2f5;
+}
+.extra-profile-row:last-child{
+    border-bottom:0;
+}
+.extra-profile-label{
+    color:#8a92a4;
+    font-size:9px;
+}
+.extra-profile-value{
+    color:#172033;
+    font-size:10px;
+    font-weight:700;
+    text-align:right;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+.extra-profile-footer{
+    padding:11px 15px 14px;
+}
+.extra-logout-btn{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    padding:9px 12px;
+    border-radius:9px;
+    background:#fff1f2;
+    color:#dc2626;
+    font-size:10px;
+    font-weight:750;
+    border:1px solid #ffe4e6;
+}
+.extra-logout-btn:hover{
+    background:#ffe4e6;
+    color:#b91c1c;
+}
+.notification-badge{
+    position:absolute;
+    top:-5px;
+    right:-5px;
+    min-width:17px;
+    height:17px;
+    padding:0 4px;
+    border-radius:20px;
+    background:#ef4444;
+    color:#fff;
+    border:2px solid #171b3a;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:8px;
+    font-weight:800;
+}
+
+
+/* ============================================================
+   EXTRA FEATURE: EDITABLE USER PROFILE
+   Existing dashboard styling remains unchanged.
+   ============================================================ */
+.profile-editor{
+    width:390px;
+    max-width:calc(100vw - 30px);
+}
+.profile-editor-head{
+    padding:18px;
+    background:linear-gradient(135deg,#171b3a,#11152e);
+    color:#fff;
+}
+.profile-editor-main{display:flex;align-items:center;gap:12px}
+.profile-editor-avatar{
+    width:52px;height:52px;border-radius:50%;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,#7c73ff,#4f46e5);
+    color:#fff;font-size:18px;font-weight:800;flex:0 0 52px;
+    border:2px solid rgba(255,255,255,.18);
+}
+.profile-editor-avatar img{width:100%;height:100%;object-fit:cover}
+.profile-editor-name{font-size:14px;font-weight:800}
+.profile-editor-sub{font-size:9px;color:rgba(255,255,255,.65);margin-top:2px}
+.profile-editor-body{padding:14px 16px;max-height:470px;overflow-y:auto}
+.profile-editor-label{font-size:9px;color:#7c8498;font-weight:700;margin-bottom:5px}
+.profile-editor-input{font-size:10px;height:38px;border:1px solid #e5e8ef;border-radius:9px}
+.profile-editor-textarea{font-size:10px;border:1px solid #e5e8ef;border-radius:9px;resize:vertical;min-height:65px}
+.profile-editor-photo{font-size:9px;width:100%}
+.profile-editor-hint{font-size:8px;color:#98a0b2;margin-top:4px}
+.profile-editor-actions{display:flex;gap:8px;margin-top:14px}
+.profile-save{
+    flex:1;border:0;border-radius:9px;padding:10px;
+    background:#635bff;color:#fff;font-size:10px;font-weight:750;cursor:pointer;
+}
+.profile-remove{
+    border:1px solid #ffe4e6;border-radius:9px;padding:9px 10px;
+    background:#fff1f2;color:#dc2626;font-size:9px;font-weight:750;cursor:pointer;
+}
+.profile-remove:hover{background:#ffe4e6}
+.profile-success{
+    margin:10px 16px 0;padding:8px 10px;border-radius:8px;
+    background:#ecfdf3;color:#15803d;font-size:9px;border:1px solid #d1fae5;
+}
+.profile-error{
+    margin:10px 16px 0;padding:8px 10px;border-radius:8px;
+    background:#fff1f2;color:#dc2626;font-size:9px;border:1px solid #ffe4e6;
+}
+.profile-current-photo{font-size:8px;color:#8a92a4;margin-top:5px}
+
+
+/* ============================================================
+   EXTRA: LARGER TOPBAR PROFILE PHOTO
+   Existing dashboard design/code remains unchanged.
+   ============================================================ */
+.top-right .profile-trigger .avatar{
+    width:58px !important;
+    height:58px !important;
+    min-width:58px !important;
+    min-height:58px !important;
+}
+
+.top-right .profile-trigger .avatar img{
+    width:100% !important;
+    height:100% !important;
+    object-fit:cover !important;
+}
+
+
+/* ============================================================
+   ADDED FEATURE: CLICKABLE DASHBOARD STAT CARDS
+   Existing dashboard CSS/code remains unchanged.
+   ============================================================ */
+.stat-card {
+    cursor: pointer;
+    user-select: none;
+}
+
+.stat-card.stat-card-active {
+    transform: translateY(-4px);
+    box-shadow: 0 0 0 3px rgba(255,255,255,.35),
+                0 14px 35px rgba(0,0,0,.22);
+}
+
+.dashboard-filter-bar {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding: 11px 14px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.dashboard-filter-bar.show {
+    display: flex;
+}
+
+.dashboard-filter-title {
+    color: #172033;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.dashboard-filter-clear {
+    border: 1px solid #e9ecf3;
+    background: #f8f9fb;
+    color: #635bff;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.dashboard-filter-clear:hover {
+    background: #efefff;
+}
+
+.document-filter-hidden {
+    display: none !important;
+}
+
+.dashboard-no-filter-result {
+    display: none;
+    text-align: center;
+    padding: 35px 20px;
+    color: #7c8498;
+    font-size: 11px;
+}
+
+.dashboard-no-filter-result.show {
+    display: table-row;
+}
+
+
+/* ============================================================
+   ADDED FEATURE: LIVE NOTIFICATIONS + ACTIVITY TIMELINE
+   Existing dashboard CSS is kept unchanged.
+   ============================================================ */
+
+.live-notification-read{
+    opacity:.58;
+}
+
+.notification-mark-all{
+    border:0;
+    background:transparent;
+    color:#635bff;
+    font-size:9px;
+    font-weight:750;
+    cursor:pointer;
+    padding:4px 0;
+}
+
+.notification-mark-all:hover{
+    text-decoration:underline;
+}
+
+.extra-notification-time{
+    display:block;
+    color:#a0a7b5;
+    font-size:8px;
+    margin-top:4px;
+}
+
+.activity-panel{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:21px;
+    margin-bottom:24px;
+}
+
+.activity-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:18px;
+}
+
+.activity-heading{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.activity-heading-icon{
+    width:42px;
+    height:42px;
+    border-radius:11px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#efefff;
+    color:#635bff;
+    font-size:18px;
+}
+
+.activity-title{
+    margin:0;
+    font-size:14px;
+    font-weight:750;
+}
+
+.activity-subtitle{
+    color:var(--muted);
+    font-size:10px;
+    margin-top:3px;
+}
+
+.activity-refresh{
+    border:1px solid var(--border);
+    background:#f8f9fb;
+    color:#635bff;
+    border-radius:9px;
+    padding:7px 10px;
+    font-size:9px;
+    font-weight:750;
+    cursor:pointer;
+}
+
+.activity-refresh:hover{
+    background:#efefff;
+}
+
+.activity-list{
+    display:flex;
+    flex-direction:column;
+    gap:0;
+}
+
+.activity-item{
+    position:relative;
+    display:flex;
+    gap:13px;
+    padding:13px 4px;
+    border-bottom:1px solid #f0f1f5;
+}
+
+.activity-item:last-child{
+    border-bottom:0;
+}
+
+.activity-line{
+    position:absolute;
+    left:19px;
+    top:43px;
+    bottom:-13px;
+    width:1px;
+    background:#e8eaf0;
+}
+
+.activity-item:last-child .activity-line{
+    display:none;
+}
+
+.activity-dot{
+    position:relative;
+    z-index:2;
+    width:31px;
+    height:31px;
+    min-width:31px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#efefff;
+    color:#635bff;
+    border:3px solid #fff;
+    box-shadow:0 0 0 1px #e7e9f0;
+    font-size:12px;
+}
+
+.activity-dot.success{
+    background:#ecfdf3;
+    color:#15803d;
+}
+
+.activity-dot.danger{
+    background:#fff1f2;
+    color:#dc2626;
+}
+
+.activity-dot.warning{
+    background:#fff7ed;
+    color:#c2410c;
+}
+
+.activity-content{
+    min-width:0;
+    flex:1;
+}
+
+.activity-action{
+    font-size:11px;
+    font-weight:750;
+    color:#172033;
+}
+
+.activity-description{
+    color:#7c8498;
+    font-size:10px;
+    margin-top:3px;
+    line-height:1.45;
+}
+
+.activity-time{
+    color:#a0a7b5;
+    font-size:8px;
+    margin-top:5px;
+}
+
+.activity-empty{
+    text-align:center;
+    padding:30px 15px;
+    color:#8a92a4;
+    font-size:10px;
+}
+
+.activity-empty i{
+    display:block;
+    font-size:28px;
+    margin-bottom:7px;
+    color:#c8cedb;
+}
+
+@media(max-width:650px){
+    .activity-panel{
+        padding:16px;
+    }
+
+    .activity-head{
+        align-items:flex-start;
+    }
+}
+
+
+/* ============================================================
+   ADDED FEATURE: DUPLICATE + RISK SCORE UI
+   ============================================================ */
+
+.intelligence-panel{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:21px;
+    margin-bottom:24px;
+}
+
+.intelligence-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:16px;
+}
+
+.intelligence-heading{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.intelligence-icon{
+    width:42px;
+    height:42px;
+    border-radius:11px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#fff4e5;
+    color:#ea7b00;
+    font-size:18px;
+}
+
+.intelligence-title{
+    margin:0;
+    font-size:14px;
+    font-weight:750;
+}
+
+.intelligence-subtitle{
+    color:var(--muted);
+    font-size:10px;
+    margin-top:3px;
+}
+
+.intelligence-refresh{
+    border:1px solid var(--border);
+    background:#f8f9fb;
+    color:#635bff;
+    border-radius:9px;
+    padding:7px 10px;
+    font-size:9px;
+    font-weight:750;
+    cursor:pointer;
+}
+
+.intelligence-summary{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-bottom:16px;
+}
+
+.intelligence-mini{
+    border:1px solid #eef0f4;
+    border-radius:11px;
+    padding:12px;
+    background:#fbfcfe;
+}
+
+.intelligence-mini-label{
+    color:#8a92a4;
+    font-size:9px;
+}
+
+.intelligence-mini-value{
+    margin-top:4px;
+    font-size:18px;
+    font-weight:800;
+}
+
+.intelligence-list{
+    display:flex;
+    flex-direction:column;
+    gap:9px;
+}
+
+.intelligence-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:11px 12px;
+    border:1px solid #eef0f4;
+    border-radius:11px;
+    background:#fff;
+}
+
+.intelligence-file{
+    flex:1;
+    min-width:0;
+}
+
+.intelligence-file strong{
+    display:block;
+    font-size:10px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.intelligence-file span{
+    display:block;
+    color:#8a92a4;
+    font-size:8px;
+    margin-top:3px;
+}
+
+.risk-badge,
+.duplicate-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    padding:5px 8px;
+    border-radius:999px;
+    font-size:8px;
+    font-weight:800;
+    white-space:nowrap;
+}
+
+.risk-low{
+    background:#ecfdf3;
+    color:#15803d;
+}
+
+.risk-medium{
+    background:#fff7ed;
+    color:#c2410c;
+}
+
+.risk-high{
+    background:#fff1f2;
+    color:#dc2626;
+}
+
+.duplicate-badge{
+    background:#fff1f2;
+    color:#dc2626;
+}
+
+.intelligence-empty{
+    text-align:center;
+    padding:25px;
+    color:#8a92a4;
+    font-size:10px;
+}
+
+@media(max-width:700px){
+    .intelligence-summary{
+        grid-template-columns:1fr;
+    }
+
+    .intelligence-row{
+        align-items:flex-start;
+        flex-wrap:wrap;
+    }
+}
+
+
+/* ============================================================
+   FINAL RESPONSIVE FIX — KEEP DASHBOARD INSIDE VIEWPORT
+   ============================================================ */
+html, body{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden !important;
+}
+
+*, *::before, *::after{
+    box-sizing:border-box;
+}
+
+.main{
+    width:calc(100% - 250px);
+    max-width:calc(100% - 250px);
+    min-width:0;
+    overflow-x:hidden;
+}
+
+.topbar,
+.content{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+}
+
+.topbar{
+    min-width:0;
+}
+
+.top-right,
+.page-heading{
+    min-width:0;
+}
+
+.content > *,
+.analytics,
+.stats,
+.types,
+.documents,
+.skill-panel,
+.job-match-panel,
+.intelligence-panel{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+}
+
+.table-responsive,
+.job-match-results,
+.skill-results{
+    width:100%;
+    max-width:100%;
+    overflow-x:auto;
+    overflow-y:hidden;
+}
+
+.table-responsive table,
+.job-match-table{
+    max-width:none;
+}
+
+.intelligence-panel{
+    overflow:hidden;
+}
+
+@media(max-width:1100px){
+    .stats{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+
+    .analytics{
+        grid-template-columns:1fr;
+    }
+}
+
+@media(max-width:768px){
+    .main{
+        margin-left:70px;
+        width:calc(100% - 70px);
+        max-width:calc(100% - 70px);
+    }
+
+    .topbar{
+        padding:0 14px;
+    }
+
+    .content{
+        padding:20px 14px 35px;
+    }
+}
+
+@media(max-width:600px){
+    .stats{
+        grid-template-columns:1fr;
+    }
+
+    .intelligence-summary{
+        grid-template-columns:1fr;
+    }
+}
+
+
+/* ============================================================
+   LOWER SECTION RESPONSIVE FIX — DOCUMENT INTELLIGENCE
+   ============================================================ */
+
+.intelligence-panel{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    overflow:hidden !important;
+    margin-left:0 !important;
+    margin-right:0 !important;
+}
+
+.intelligence-head{
+    width:100%;
+    min-width:0;
+}
+
+.intelligence-heading{
+    min-width:0;
+    flex:1 1 auto;
+}
+
+.intelligence-heading > div:last-child{
+    min-width:0;
+}
+
+.intelligence-title,
+.intelligence-subtitle{
+    max-width:100%;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.intelligence-summary{
+    width:100%;
+    min-width:0;
+}
+
+.intelligence-mini{
+    min-width:0;
+}
+
+.intelligence-list{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    max-height:420px;
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding-right:4px;
+}
+
+.intelligence-row{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) auto auto;
+    align-items:center;
+}
+
+.intelligence-file{
+    min-width:0 !important;
+    max-width:100%;
+}
+
+.intelligence-file strong,
+.intelligence-file span{
+    max-width:100%;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.risk-badge,
+.duplicate-badge{
+    max-width:100%;
+    flex-shrink:0;
+}
+
+.documents{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+}
+
+.documents .table-responsive{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    overflow-x:auto;
+    overflow-y:hidden;
+}
+
+.documents table{
+    min-width:900px;
+}
+
+.analytics{
+    width:100%;
+    min-width:0;
+}
+
+.analytics .panel{
+    min-width:0;
+    overflow:hidden;
+}
+
+.types{
+    width:100%;
+    min-width:0;
+}
+
+.type{
+    min-width:0;
+}
+
+.search-panel{
+    width:100%;
+    min-width:0;
+    overflow:hidden;
+}
+
+.activity-panel,
+.skill-panel,
+.job-match-panel{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    overflow:hidden !important;
+}
+
+@media(max-width:900px){
+    .intelligence-row{
+        grid-template-columns:minmax(0,1fr) auto;
+        row-gap:7px;
+    }
+
+    .intelligence-row .duplicate-badge{
+        grid-column:2;
+        grid-row:2;
+    }
+
+    .intelligence-list{
+        max-height:360px;
+    }
+}
+
+@media(max-width:600px){
+    .intelligence-head{
+        align-items:flex-start;
+    }
+
+    .intelligence-refresh{
+        flex-shrink:0;
+    }
+
+    .intelligence-summary{
+        grid-template-columns:1fr !important;
+    }
+
+    .intelligence-row{
+        grid-template-columns:1fr !important;
+        gap:8px;
+    }
+
+    .intelligence-row .duplicate-badge{
+        grid-column:1;
+        grid-row:auto;
+        justify-self:start;
+    }
+
+    .risk-badge{
+        justify-self:start;
+    }
+
+    .intelligence-list{
+        max-height:330px;
+    }
+
+    .chart-wrap{
+        height:210px;
+    }
+}
+
+
+/* ============================================================
+   FINAL LAYOUT FIX — KEEP LOWER SECTIONS INSIDE MAIN CONTENT
+   ============================================================ */
+.main > .activity-panel,
+.main > .intelligence-panel,
+.main > .documents,
+.main > .analytics,
+.main > .search-panel,
+.main > .skill-panel,
+.main > .job-match-panel {
+    display:block;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    box-sizing:border-box !important;
+    margin-left:0 !important;
+    margin-right:0 !important;
+}
+
+.main > .activity-panel {
+    position:relative !important;
+    left:auto !important;
+    right:auto !important;
+    float:none !important;
+    clear:both !important;
+    height:auto !important;
+    min-height:0 !important;
+    max-height:none !important;
+    overflow:hidden !important;
+}
+
+.main > .activity-panel .activity-list {
+    width:100%;
+    min-height:0;
+    max-height:420px;
+    overflow-y:auto;
+    overflow-x:hidden;
+}
+
+.main > .activity-panel .activity-item {
+    width:100%;
+    box-sizing:border-box;
+}
+
+/* Do not let any lower feature create a page-wide horizontal track. */
+.main > section {
+    overflow-x:hidden !important;
+}
+
+@media(max-width:768px){
+    .main > .activity-panel .activity-list {
+        max-height:340px;
+    }
+}
+
+
+
+/* ============================================================
+   ADDED FEATURE: DASHBOARD SIGNATURE SECURITY CARD
+   ============================================================ */
+.dashboard-signature-security{
+    margin-top:18px;padding:18px;border-radius:16px;
+    background:#fff;border:1px solid #e5ebf4;
+    box-shadow:0 5px 18px rgba(0,0,0,.06);
+}
+.dashboard-signature-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px;}
+.dashboard-signature-stat{padding:11px;border-radius:12px;background:#f7f9fc;}
+.dashboard-signature-stat strong{display:block;font-size:20px;}
+.dashboard-signature-stat span{font-size:11px;color:#737b8e;}
+.dashboard-signature-alert{margin-top:12px;font-size:12px;}
+@media(max-width:800px){.dashboard-signature-grid{grid-template-columns:repeat(2,1fr);}}
+
+</style>
+</head>
+
+<body>
+
+<aside class="sidebar">
+    <div class="brand">
+        <div class="brand-icon"><i class="bi bi-shield-check"></i></div>
+        <div class="brand-name">DocVerify</span></div>
+    </div>
+
+    <div class="menu-label">Workspace</div>
+    <ul class="sidebar-menu">
+        <li><a href="/dashboard" class="active"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a></li>
+        <li><a href="/upload"><i class="bi bi-cloud-arrow-up-fill"></i><span>Upload Document</span></a></li>
+    </ul>
+
+    <div class="menu-label mt-4">Account</div>
+    <ul class="sidebar-menu">
+        <li><a href="/logout"><i class="bi bi-box-arrow-right"></i><span>Logout</span></a></li>
+    </ul>
+
+    <div class="sidebar-bottom">
+        <div class="security-card">
+            <div><i class="bi bi-shield-lock security-icon"></i>
+                <span class="security-title ms-2">Secure Workspace</span>
+            </div>
+            <div class="security-text">Your documents are protected</div>
+        </div>
+    </div>
+</aside>
+
+<main class="main">
+
+<header class="topbar">
+    <div class="page-heading">
+
+    <div class="heading-icon">
+        <i class="bi bi-grid-1x2-fill"></i>
+    </div>
+
+    <div>
+        <h1 class="top-title">Dashboard</h1>
+
+        <div class="top-subtitle">
+            Intelligent Document Verification
+        </div>
+    </div>
+
+</div>
+
+    <div class="top-right">
+
+        <!-- EXTRA: Notification dropdown -->
+        <div class="notification-wrap">
+            <button type="button"
+                    class="notification"
+                    id="notificationButton"
+                    aria-label="Notifications"
+                    title="Notifications">
+                <i class="bi bi-bell"></i>
+                {% if documents and documents|length > 0 %}
+                    <span class="notification-badge">{{documents|length if documents|length < 10 else '9+'}}</span>
+                {% endif %}
+            </button>
+
+            <div class="extra-dropdown" id="notificationDropdown">
+                <div class="extra-dropdown-head">
+                    <h3 class="extra-dropdown-title">Notifications</h3>
+                    <div class="extra-dropdown-sub">Recent document activity</div>
+                </div>
+
+                <div class="notification-list">
+                    {% if documents %}
+                        {% for doc in documents[:6] %}
+                            <a href="/document/{{doc.id}}" class="extra-notification-item">
+                                <div class="extra-notification-icon {% if doc.verification_status == 'Verified' %}success{% elif doc.verification_status == 'Rejected' %}danger{% endif %}">
+                                    {% if doc.verification_status == "Verified" %}
+                                        <i class="bi bi-check-circle-fill"></i>
+                                    {% elif doc.verification_status == "Rejected" %}
+                                        <i class="bi bi-x-circle-fill"></i>
+                                    {% else %}
+                                        <i class="bi bi-file-earmark-text-fill"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="extra-notification-text">
+                                    <strong>{{doc.filename}}</strong>
+                                    <span>
+                                        {{doc.verification_status}}
+                                        {% if doc.upload_date %} · {{doc.upload_date}}{% endif %}
+                                    </span>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    {% else %}
+                        <div class="extra-notification-empty">
+                            <i class="bi bi-bell-slash" style="font-size:22px;display:block;margin-bottom:7px;"></i>
+                            No notifications yet
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- EXTRA: Profile dropdown -->
+        <div class="profile-wrap">
+            <button type="button"
+                    class="profile-trigger"
+                    id="profileButton"
+                    aria-label="Open profile"
+                    title="Profile">
+                <div class="avatar" style="overflow:hidden;">
+                    {% if profile_photo %}
+                        <img src="{{ url_for('profile_photo', filename=profile_photo) + '?v=' + profile_photo }}" alt="Profile" style="width:100%;height:100%;object-fit:cover;">
+                    {% else %}
+                        {{name[0]|upper}}
+                    {% endif %}
+                </div>
+                <div class="user-info">
+                    <strong>{{name}}</strong>
+                    <small>User Account</small>
+                </div>
+                <i class="bi bi-chevron-down profile-chevron"></i>
+            </button>
+
+            <div class="extra-dropdown profile-editor" id="profileDropdown">
+                <div class="profile-editor-head">
+                    <div class="profile-editor-main">
+                        <div class="profile-editor-avatar">
+                            {% if profile_photo %}
+                                <img src="{{ url_for('profile_photo', filename=profile_photo) + '?v=' + profile_photo }}" alt="Profile Photo">
+                            {% else %}
+                                {{name[0]|upper}}
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="profile-editor-name">{{name}}</div>
+                            <div class="profile-editor-sub">User Account · DocVerify</div>
+                        </div>
+                    </div>
+                </div>
+
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="profile-success">
+                                <i class="bi bi-check-circle-fill me-1"></i>{{message}}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form method="POST" action="/profile/update" enctype="multipart/form-data" class="profile-editor-body">
+                    <div class="mb-2">
+                        <div class="profile-editor-label">Full Name</div>
+                        <input type="text" name="name" class="form-control profile-editor-input" value="{{name}}" required>
+                    </div>
+
+                    <div class="mb-2">
+                        <div class="profile-editor-label">Email Address</div>
+                        <input type="email" name="email" class="form-control profile-editor-input" value="{{email}}" required>
+                    </div>
+
+                    <div class="mb-2">
+                        <div class="profile-editor-label">Mobile Number</div>
+                        <input type="tel" name="phone" class="form-control profile-editor-input" value="{{phone}}" placeholder="Enter mobile number">
+                    </div>
+
+                    <div class="mb-2">
+                        <div class="profile-editor-label">Address</div>
+                        <textarea name="address" class="form-control profile-editor-textarea" placeholder="Enter address">{{address}}</textarea>
+                    </div>
+
+                    <div class="mb-1">
+                        <div class="profile-editor-label">Profile Photo</div>
+                        <input type="file" name="profile_photo" class="form-control profile-editor-photo" accept=".jpg,.jpeg,.png,.webp">
+                        <div class="profile-editor-hint">JPG, JPEG, PNG or WEBP · You can change it anytime.</div>
+                        {% if profile_photo %}
+                            <div class="profile-current-photo"><i class="bi bi-image me-1"></i>Current profile photo is saved.</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="profile-editor-actions">
+                        <button type="submit" class="profile-save">
+                            <i class="bi bi-check2-circle me-1"></i>Save Changes
+                        </button>
+                        {% if profile_photo %}
+                            <button type="submit" name="remove_photo" value="1" class="profile-remove" onclick="return confirm('Remove your profile photo?')">
+                                <i class="bi bi-trash3 me-1"></i>Remove
+                            </button>
+                        {% endif %}
+                    </div>
+                </form>
+
+                <div class="extra-profile-footer">
+                    <div class="extra-profile-row">
+                        <span class="extra-profile-label">Documents</span>
+                        <span class="extra-profile-value">{{total_documents}}</span>
+                    </div>
+                    <a href="/logout" class="extra-logout-btn">
+                        <i class="bi bi-box-arrow-right"></i>
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</header>
+
+<section class="content">
+
+<div class="welcome">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h2>Welcome back, {{name}} 👋</h2>
+            <p>Your document verification workspace is ready.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <a href="/upload" class="upload-btn">
+                <i class="bi bi-plus-lg"></i> Upload Document
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="stats">
+
+<div class="stat-card">
+    <div class="stat-icon blue"><i class="bi bi-files"></i></div>
+    <div class="stat-label">Total Documents</div>
+    <div class="stat-number">{{total_documents}}</div>
+    <div class="stat-bottom">All uploaded files</div>
+</div>
+
+<div class="stat-card">
+    <div class="stat-icon green"><i class="bi bi-check2-circle"></i></div>
+    <div class="stat-label">Verified Documents</div>
+    <div class="stat-number">{{verified_documents}}</div>
+    <div class="stat-bottom">Successfully verified</div>
+</div>
+
+<div class="stat-card">
+    <div class="stat-icon red"><i class="bi bi-x-circle"></i></div>
+    <div class="stat-label">Rejected Documents</div>
+    <div class="stat-number">{{rejected_documents}}</div>
+    <div class="stat-bottom">Need attention</div>
+</div>
+
+<div class="stat-card">
+    <div class="stat-icon yellow"><i class="bi bi-stars"></i></div>
+    <div class="stat-label">Average Confidence</div>
+    <div class="stat-number">{{average_confidence}}%</div>
+    <div class="stat-bottom">Verification score</div>
+</div>
+
+</div>
+
+<!-- ============================================================
+    AI SKILL FINDER
+============================================================ -->
+
+<div class="skill-panel">
+
+    <div class="skill-header">
+        <i class="bi bi-search-heart"></i>
+        <div>
+            <h3 class="skill-title">Skills</h3>
+            <div class="skill-subtitle">
+                Search resumes for a specific technical skill
+            </div>
+        </div>
+    </div>
+
+    <form method="GET" action="/dashboard" class="skill-form mt-3">
+        <div class="row g-2">
+            <div class="col-lg-9">
+                <input
+                    type="text"
+                    name="skill"
+                    class="form-control"
+                    placeholder="Search a skill e.g. Java, Python, C, SQL..."
+                    value="{{skill}}">
+            </div>
+            <div class="col-lg-3">
+                <button class="btn btn-primary w-100 h-100" type="submit">
+                    <i class="bi bi-search me-1"></i>
+                    Find Skill
+                </button>
+            </div>
+        </div>
+    </form>
+
+    {% if skill %}
+<div class="skill-results">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <strong>Skill Search Result:</strong>
+            <span style="color:#635bff;font-weight:700;">
+                {{skill}}
+            </span>
+        </div>
+
+        <span class="count-badge">
+            {{skill_results|length}} Resume(s)
+        </span>
+    </div>
+
+
+    {% if skill_results %}
+
+    <div class="skill-results-grid">
+
+        {% for result in skill_results %}
+
+        <div class="skill-result">
+
+            <!-- RESUME INFORMATION -->
+            <div class="skill-result-info">
+
+                <div
+                    class="skill-result-filename"
+                    title="{{result.filename}}">
+
+                    <i class="bi bi-file-earmark-person me-1"></i>
+                    {{result.filename}}
+
+                </div>
+
+                <div class="skill-result-meta">
+
+                    Document Type:
+                    <strong>
+                        {{result.document_type}}
+                    </strong>
+
+                </div>
+
+                <div class="skill-result-meta">
+
+                    Verification:
+                    <strong>
+                        {{result.verification_status}}
+                    </strong>
+
+                </div>
+
+                <div class="skill-result-meta">
+
+                    Confidence:
+                    <strong>
+                        {{result.confidence_score}}%
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- SKILL RESULT -->
+            <div class="skill-result-bottom">
+
+                <div class="skill-result-status" style="width:100%;">
+
+                    {% if result.skill_statuses %}
+
+                        <div class="skill-status-list">
+
+                            {% for status in result.skill_statuses %}
+
+                                {% if status.found %}
+
+                                    <div class="skill-status-item skill-status-found">
+                                        <span>
+                                            <i class="bi bi-check-circle-fill me-1"></i>
+                                            {{status.skill}}
+                                        </span>
+                                        <strong>Found</strong>
+                                    </div>
+
+                                {% else %}
+
+                                    <div class="skill-status-item skill-status-missing">
+                                        <span>
+                                            <i class="bi bi-x-circle-fill me-1"></i>
+                                            {{status.skill}}
+                                        </span>
+                                        <strong>Not Found</strong>
+                                    </div>
+
+                                {% endif %}
+
+                            {% endfor %}
+
+                        </div>
+
+                    {% else %}
+
+                        {% if result.found %}
+
+                            <span class="skill-found">
+                                <i class="bi bi-check-circle-fill me-1"></i>
+                                {{skill}} Found
+                            </span>
+
+                            <div
+                                style="
+                                font-size:9px;
+                                color:#15803d;
+                                margin-top:6px;
+                                font-weight:700;
+                                ">
+                                ✓ Candidate has this skill
+                            </div>
+
+                        {% else %}
+
+                            <span class="skill-missing">
+                                <i class="bi bi-x-circle-fill me-1"></i>
+                                {{skill}} Not Found
+                            </span>
+
+                        {% endif %}
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- VIEW RESUME -->
+                <a
+                    href="/document/{{result.id}}"
+                    class="action"
+                    title="View Resume">
+
+                    <i class="bi bi-eye"></i>
+
+                </a>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+
+{% else %}
+
+    <div
+        class="alert alert-warning mb-0"
+        style="font-size:11px;">
+
+        <i class="bi bi-exclamation-triangle me-1"></i>
+
+        No resume found containing
+        <strong>{{skill}}</strong>.
+
+        <div
+            style="
+            margin-top:5px;
+            font-size:10px;
+            ">
+
+            Make sure the uploaded resume contains
+            this skill in its readable text.
+
+        </div>
+
+    </div>
+
+{% endif %}
+
+    <!-- Multi-skill matching -->
+
+    <hr class="my-4">
+
+    <div class="skill-header">
+        <i class="bi bi-people"></i>
+        <div>
+            <h3 class="skill-title">Candidate Skill Matching</h3>
+            <div class="skill-subtitle">
+                Enter multiple required skills separated by commas
+            </div>
+        </div>
+    </div>
+
+    <form method="GET" action="/dashboard" class="mt-3">
+
+        <div class="row g-2">
+
+            <div class="col-lg-9">
+                <input
+                    type="text"
+                    name="required_skills"
+                    class="form-control"
+                    placeholder="Example: Java, Python, SQL"
+                    value="{{required_skills_input}}">
+            </div>
+
+            <div class="col-lg-3">
+                <button class="btn btn-dark w-100 h-100" type="submit">
+                    <i class="bi bi-stars me-1"></i>
+                    Match Candidates
+                </button>
+            </div>
+
+        </div>
+
+    </form>
+
+    {% if candidate_results %}
+
+    <div class="table-responsive mt-4">
+
+        <table class="table align-middle">
+
+            <thead>
+                <tr>
+                    <th>Candidate Resume</th>
+                    <th>Matched Skills</th>
+                    <th>Missing Skills</th>
+                    <th>Match Score</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            {% for candidate in candidate_results %}
+
+            <tr>
+
+                <td>
+                    <strong>{{candidate.filename}}</strong>
+                </td>
+
+                <td>
+                    {% for item in candidate.matched %}
+                        <span class="match-skill">✓ {{item}}</span>
+                    {% else %}
+                        <span style="font-size:10px;color:#999;">None</span>
+                    {% endfor %}
+                </td>
+
+                <td>
+                    {% for item in candidate.missing %}
+                        <span class="missing-skill">✕ {{item}}</span>
+                    {% else %}
+                        <span class="match-skill">All matched</span>
+                    {% endfor %}
+                </td>
+
+                <td>
+                    <span class="match-score">
+                        {{candidate.score}}%
+                    </span>
+                </td>
+
+                <td>
+                    <a
+                        href="/document/{{candidate.id}}"
+                        class="action"
+                        title="View Candidate">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    {% endif %}
+
+
+</div>
+
+{% endif %}
+
+<!-- ============================================================
+     JOB DESCRIPTION MATCHER
+============================================================ -->
+
+<div class="job-match-panel">
+
+    <div class="job-match-header">
+        <i class="bi bi-briefcase-fill"></i>
+        <div>
+            <h3 class="job-match-title">Job Description Matcher</h3>
+            <div class="job-match-subtitle">
+                Paste a job description and find the best matching resumes
+            </div>
+        </div>
+    </div>
+
+    <form method="GET" action="/dashboard" class="job-match-form mt-3">
+
+        <div class="mb-2">
+            <textarea
+                name="job_description"
+                class="form-control"
+                placeholder="Example: We are looking for a candidate with Java, Python, SQL and Flask skills..."
+            >{{job_description}}</textarea>
+        </div>
+
+        <div class="row g-2 mt-1">
+
+            <div class="col-lg-9">
+                <input
+                    type="text"
+                    name="required_skills"
+                    class="form-control"
+                    placeholder="Optional: Java, Python, SQL"
+                    value="{{required_skills_input}}">
+                <div style="font-size:9px;color:#98a0b2;margin-top:5px;">
+                    Optional. If left empty, skills will be detected automatically
+                    from the job description.
+                </div>
+            </div>
+
+            <div class="col-lg-3">
+                <button class="btn btn-primary w-100 h-100" type="submit">
+                    <i class="bi bi-search-heart me-1"></i>
+                    Find Best Candidates
+                </button>
+            </div>
+
+        </div>
+
+    </form>
+
+    {% if job_description %}
+
+        <div class="mt-4">
+
+            {% if job_description_skills %}
+
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <strong style="font-size:12px;">Detected Job Skills</strong>
+                        <div style="font-size:9px;color:#98a0b2;">
+                            Only supported technical skills are used for matching.
+                        </div>
+                    </div>
+
+                    <span class="count-badge">
+                        {{job_description_skills|length}} Skill(s)
+                    </span>
+                </div>
+
+                <div class="job-skill-summary mb-3">
+                    {% for item in job_description_skills %}
+                        <span class="job-pill job-pill-found">
+                            ✓ {{item}}
+                        </span>
+                    {% endfor %}
+                </div>
+
+                {% if job_candidate_results %}
+
+                    <div class="job-match-results">
+
+                        <table class="table align-middle job-match-table">
+
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Candidate Resume</th>
+                                    <th>Matched Skills</th>
+                                    <th>Missing Skills</th>
+                                    <th>Job Match</th>
+                                    <th>Resume Score</th>
+                                    <th>Recommendation</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                            {% for candidate in job_candidate_results %}
+
+                                <tr>
+
+                                    <td>
+                                        <span class="job-rank">
+                                            #{{candidate.rank}}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <strong style="font-size:11px;">
+                                            {{candidate.filename}}
+                                        </strong>
+                                        <div style="font-size:9px;color:#98a0b2;margin-top:4px;">
+                                            {{candidate.verification_status}}
+                                            · {{candidate.confidence_score}}% OCR
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        {% for item in candidate.matched %}
+                                            <span class="job-pill job-pill-found">
+                                                ✓ {{item}}
+                                            </span>
+                                        {% else %}
+                                            <span style="font-size:10px;color:#999;">
+                                                None
+                                            </span>
+                                        {% endfor %}
+                                    </td>
+
+                                    <td>
+                                        {% for item in candidate.missing %}
+                                            <span class="job-pill job-pill-missing">
+                                                ✕ {{item}}
+                                            </span>
+                                        {% else %}
+                                            <span class="job-pill job-pill-found">
+                                                ✓ All matched
+                                            </span>
+                                        {% endfor %}
+                                    </td>
+
+                                    <td>
+                                        <span class="job-score">
+                                            {{candidate.score}}%
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <strong class="job-score-small">
+                                            {{candidate.resume_score}}/100
+                                        </strong>
+                                        <div class="job-score-small">
+                                            {{candidate.resume_score_label}}
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <div class="job-recommendation">
+                                            {{candidate.recommendation}}
+                                        </div>
+                                    </td>
+
+                                    <td class="text-nowrap">
+
+                                        <a
+                                            href="/document/{{candidate.id}}"
+                                            class="action"
+                                            title="View Candidate">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+
+                                        <a
+                                            href="/candidate-report/{{candidate.id}}?skills={{job_description_skills|join(',')}}"
+                                            class="action"
+                                            title="Candidate Report">
+                                            <i class="bi bi-file-earmark-pdf"></i>
+                                        </a>
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                {% else %}
+
+                    <div class="job-empty">
+                        <i class="bi bi-info-circle me-1"></i>
+                        No resume is available for matching yet.
+                        Upload resumes first and try again.
+                    </div>
+
+                {% endif %}
+
+            {% else %}
+
+                <div class="alert alert-warning mb-0" style="font-size:11px;">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    No supported technical skills were detected in this job description.
+                    Try adding skills such as Java, Python, C, SQL, Flask, React, etc.
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+<!-- ============================================================
+     ANALYTICS
+============================================================ -->
+
+<div class="analytics">
+
+<div class="panel">
+    <div class="panel-head">
+        <div>
+            <h3 class="panel-title">Document Analytics</h3>
+            <div class="panel-subtitle">Uploaded document types</div>
+        </div>
+        <span class="count-badge">Live Data</span>
+    </div>
+    <div class="chart-wrap">
+        <canvas id="documentChart"></canvas>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-head">
+        <div>
+            <h3 class="panel-title">Verification Overview</h3>
+            <div class="panel-subtitle">Verification result distribution</div>
+        </div>
+        <span class="count-badge">Overview</span>
+    </div>
+    <div class="chart-wrap">
+        <canvas id="verificationChart"></canvas>
+    </div>
+</div>
+
+</div>
+
+<div class="types">
+
+<div class="type">
+    <div class="type-icon" style="background:#efefff;color:#635bff;">
+        <i class="bi bi-file-earmark-person"></i>
+    </div>
+    <div><h6>Resume</h6><h3>{{resume_count}}</h3></div>
+</div>
+
+<div class="type">
+    <div class="type-icon" style="background:#eaf8ff;color:#0284c7;">
+        <i class="bi bi-person-vcard"></i>
+    </div>
+    <div><h6>Aadhaar Card</h6><h3>{{aadhaar_count}}</h3></div>
+</div>
+
+<div class="type">
+    <div class="type-icon" style="background:#fff7e6;color:#d97706;">
+        <i class="bi bi-credit-card-2-front"></i>
+    </div>
+    <div><h6>PAN Card</h6><h3>{{pan_count}}</h3></div>
+</div>
+
+</div>
+
+<div class="search-panel">
+    <div class="row align-items-center">
+        <div class="col-lg-4 mb-3 mb-lg-0">
+            <div class="search-title">Find a Document</div>
+            <div class="search-sub">Search by filename or document type</div>
+        </div>
+
+        <div class="col-lg-8">
+            <form method="GET" action="/dashboard">
+                <div class="input-group">
+                    <div class="search-input flex-grow-1">
+                        <i class="bi bi-search"></i>
+                        <input
+                            type="text"
+                            name="search"
+                            class="form-control"
+                            placeholder="Search documents..."
+                            value="{{search}}">
+                    </div>
+                    <button class="btn btn-dark px-4" type="submit">Search</button>
+                    {% if search %}
+                    <a href="/dashboard" class="btn btn-outline-secondary">Clear</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="documents">
+
+<div class="documents-head">
+    <div>
+        <h3 class="documents-title">Recent Documents</h3>
+        <div class="documents-sub">Uploaded documents and verification results</div>
+    </div>
+    <div class="count-badge">{{total_documents}} Documents</div>
+</div>
+
+<div class="table-responsive">
+
+<table class="table">
+
+<thead>
+<tr>
+    <th>Document</th>
+    <th>Type</th>
+    <th>Status</th>
+    <th>Confidence</th>
+    <th>Downloads</th>
+    <th>Date</th>
+    <th>Actions</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for doc in documents %}
+
+<tr>
+
+<td>
+<div class="file">
+    <div class="file-icon">
+        {% if doc.filename.lower().endswith('.pdf') %}
+        <i class="bi bi-file-earmark-pdf"></i>
+        {% else %}
+        <i class="bi bi-file-earmark-image"></i>
+        {% endif %}
+    </div>
+    <div>
+        <div class="file-name" title="{{doc.filename}}">{{doc.filename}}</div>
+        <span class="file-id">Document #{{doc.id}}</span>
+    </div>
+</div>
+</td>
+
+<td>
+{% if doc.document_type == "Resume" %}
+<span class="badge rounded-pill text-bg-primary">Resume</span>
+{% elif doc.document_type == "Aadhaar Card" %}
+<span class="badge rounded-pill text-bg-info">Aadhaar</span>
+{% elif doc.document_type == "PAN Card" %}
+<span class="badge rounded-pill text-bg-warning">PAN</span>
+{% else %}
+<span class="badge rounded-pill text-bg-light">{{doc.document_type}}</span>
+{% endif %}
+</td>
+
+<td>
+{% if doc.verification_status == "Verified" %}
+<span class="status verified">
+    <i class="bi bi-check-circle-fill"></i> Verified
+</span>
+{% else %}
+<span class="status rejected">
+    <i class="bi bi-x-circle-fill"></i> Rejected
+</span>
+{% endif %}
+</td>
+
+<td>
+<div class="confidence">
+    <div class="confidence-number">{{doc.confidence_score}}%</div>
+    <div class="progress">
+        <div
+            class="progress-bar
+            {% if doc.confidence_score >= 90 %}
+            bg-success
+            {% elif doc.confidence_score >= 70 %}
+            bg-warning
+            {% else %}
+            bg-danger
+            {% endif %}"
+            style="width:{{doc.confidence_score}}%">
+        </div>
+    </div>
+</div>
+</td>
+
+<td>
+<span style="color:#737b8e;font-size:11px;">
+    <i class="bi bi-download"></i> {{doc.download_count}}
+</span>
+</td>
+
+<td>
+<span style="color:#7c8498;font-size:10px;">
+    {{doc.upload_date}}
+</span>
+</td>
+
+<td class="text-nowrap">
+
+<a href="/document/{{doc.id}}" class="action" title="View">
+    <i class="bi bi-eye"></i>
+</a>
+
+<a href="/download/{{doc.filename}}" class="action" title="Download">
+    <i class="bi bi-download"></i>
+</a>
+
+<a href="/report/{{doc.id}}" class="action" title="PDF Report">
+    <i class="bi bi-file-earmark-pdf"></i>
+</a>
+
+<a
+    href="/delete/{{doc.id}}"
+    class="action delete"
+    title="Delete"
+    onclick="return confirm('Are you sure you want to delete this document?')">
+    <i class="bi bi-trash3"></i>
+</a>
+
+</td>
+
+</tr>
+
+{% else %}
+
+<tr>
+<td colspan="7">
+<div class="empty">
+    <i class="bi bi-folder2-open" style="font-size:42px;color:#c8cedb;"></i>
+    <h5>No Documents Yet</h5>
+    <p style="color:#7c8498;font-size:11px;">Upload your first document to start verification.</p>
+    <a href="/upload" class="btn btn-primary btn-sm">
+        <i class="bi bi-cloud-arrow-up me-1"></i> Upload Document
+    </a>
+</div>
+</td>
+</tr>
+
+{% endfor %}
+
+</tbody>
+</table>
+
+</div>
+</div>
+
+</section>
+
+<!-- ============================================================
+     ADDED FEATURE: DOCUMENT INTELLIGENCE
+     ============================================================ -->
+
+<section class="intelligence-panel" id="documentIntelligencePanel">
+
+    <div class="intelligence-head">
+
+        <div class="intelligence-heading">
+
+            <div class="intelligence-icon">
+                <i class="bi bi-shield-exclamation"></i>
+            </div>
+
+            <div>
+                <h3 class="intelligence-title">
+                    Document Intelligence
+                </h3>
+
+                <div class="intelligence-subtitle">
+                    Duplicate detection and document risk analysis
+                </div>
+            </div>
+
+        </div>
+
+        <button
+            type="button"
+            class="intelligence-refresh"
+            id="intelligenceRefresh">
+
+            <i class="bi bi-arrow-clockwise me-1"></i>
+            Analyze
+
+        </button>
+
+    </div>
+
+
+    <div class="intelligence-summary">
+
+        <div class="intelligence-mini">
+            <div class="intelligence-mini-label">
+                Duplicate Documents
+            </div>
+
+            <div
+                class="intelligence-mini-value"
+                id="duplicateCount">
+                0
+            </div>
+        </div>
+
+
+        <div class="intelligence-mini">
+            <div class="intelligence-mini-label">
+                High Risk
+            </div>
+
+            <div
+                class="intelligence-mini-value"
+                id="highRiskCount">
+                0
+            </div>
+        </div>
+
+
+        <div class="intelligence-mini">
+            <div class="intelligence-mini-label">
+                Safe / Low Risk
+            </div>
+
+            <div
+                class="intelligence-mini-value"
+                id="lowRiskCount">
+                0
+            </div>
+        </div>
+
+    </div>
+
+
+    <div
+        class="intelligence-list"
+        id="intelligenceList">
+
+        <div class="intelligence-empty">
+            <i class="bi bi-shield-check"
+               style="font-size:28px;display:block;margin-bottom:7px;">
+            </i>
+
+            Analyzing your documents...
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<section class="activity-panel" id="activityTimelinePanel">
+    <div class="activity-head">
+        <div class="activity-heading">
+            <div class="activity-heading-icon">
+                <i class="bi bi-clock-history"></i>
+            </div>
+            <div>
+                <h3 class="activity-title">Activity Timeline</h3>
+                <div class="activity-subtitle">
+                    Your recent DocVerify activities
+                </div>
+            </div>
+        </div>
+
+        <button type="button"
+                class="activity-refresh"
+                id="activityRefreshButton">
+            <i class="bi bi-arrow-clockwise me-1"></i>
+            Refresh
+        </button>
+    </div>
+
+    <div class="activity-list" id="activityList">
+        <div class="activity-empty">
+            <i class="bi bi-hourglass-split"></i>
+            Loading activity...
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     ADDED FEATURE: SIGNATURE SECURITY DASHBOARD
+     Existing dashboard sections remain unchanged.
+     ============================================================ -->
+<section class="dashboard-signature-security" id="dashboardSignatureSecurity">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div>
+            <h3 style="margin:0;font-size:17px;"><i class="bi bi-pen-fill me-2"></i>Signature Security</h3>
+            <div style="font-size:11px;color:#737b8e;margin-top:3px;">Registered signatures and fraud-screening results</div>
+        </div>
+        <a href="/document-verification" class="btn btn-sm btn-primary">Open Verification Center</a>
+    </div>
+    <div class="dashboard-signature-grid">
+        <div class="dashboard-signature-stat"><strong id="dashSigProfiles">0</strong><span>Profiles</span></div>
+        <div class="dashboard-signature-stat"><strong id="dashSigSamples">0</strong><span>Genuine Samples</span></div>
+        <div class="dashboard-signature-stat"><strong id="dashSigVerified">0</strong><span>Verified</span></div>
+        <div class="dashboard-signature-stat"><strong id="dashSigSuspicious">0</strong><span>Possible Forgery</span></div>
+    </div>
+    <div id="dashSigAlert" class="dashboard-signature-alert">Loading signature security status...</div>
+</section>
+
+</main>
+
+<script>
+new Chart(
+    document.getElementById("documentChart"),
+    {
+        type:"doughnut",
+        data:{
+            labels:["Resume","Aadhaar Card","PAN Card"],
+            datasets:[{
+                data:[
+                    {{resume_count}},
+                    {{aadhaar_count}},
+                    {{pan_count}}
+                ],
+                borderWidth:0,
+                hoverOffset:7
+            }]
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            cutout:"72%",
+            plugins:{
+                legend:{
+                    position:"bottom",
+                    labels:{
+                        usePointStyle:true,
+                        pointStyle:"circle",
+                        padding:18,
+                        font:{size:10}
+                    }
+                }
+            }
+        }
+    }
+);
+
+new Chart(
+    document.getElementById("verificationChart"),
+    {
+        type:"doughnut",
+        data:{
+            labels:["Verified","Rejected"],
+            datasets:[{
+                data:[
+                    {{verified_documents}},
+                    {{rejected_documents}}
+                ],
+                borderWidth:0,
+                hoverOffset:7
+            }]
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            cutout:"72%",
+            plugins:{
+                legend:{
+                    position:"bottom",
+                    labels:{
+                        usePointStyle:true,
+                        pointStyle:"circle",
+                        padding:18,
+                        font:{size:10}
+                    }
+                }
+            }
+        }
+    }
+);
+</script>
+
+
+<script>
+/* ============================================================
+   ADDED FEATURE: CLICKABLE DASHBOARD STAT CARDS
+   Existing dashboard JavaScript remains unchanged.
+   ============================================================ */
+document.addEventListener("DOMContentLoaded", function () {
+
+    const statCards = document.querySelectorAll(".stat-card");
+    const documentsTable = document.querySelector(".documents table");
+    const documentRows = documentsTable
+        ? documentsTable.querySelectorAll("tbody tr")
+        : [];
+
+    const documentsBox = document.querySelector(".documents");
+
+    if (!statCards.length || !documentsTable || !documentsBox) {
+        return;
+    }
+
+    /* Create filter information bar without changing existing HTML. */
+    const filterBar = document.createElement("div");
+    filterBar.className = "dashboard-filter-bar";
+
+    const filterTitle = document.createElement("div");
+    filterTitle.className = "dashboard-filter-title";
+
+    const clearButton = document.createElement("button");
+    clearButton.type = "button";
+    clearButton.className = "dashboard-filter-clear";
+    clearButton.innerHTML = '<i class="bi bi-x-circle me-1"></i>Show All';
+
+    filterBar.appendChild(filterTitle);
+    filterBar.appendChild(clearButton);
+
+    documentsBox.parentNode.insertBefore(filterBar, documentsBox);
+
+    /* Message used only when a selected category has no documents. */
+    const noResultRow = document.createElement("tr");
+    noResultRow.className = "dashboard-no-filter-result";
+    noResultRow.innerHTML =
+        '<td colspan="7">' +
+        '<i class="bi bi-folder2-open" style="font-size:30px;display:block;margin-bottom:8px;color:#c8cedb;"></i>' +
+        '<strong>No documents found</strong>' +
+        '<div style="margin-top:4px;">There are no documents in this category.</div>' +
+        '</td>';
+
+    const tbody = documentsTable.querySelector("tbody");
+    if (tbody) {
+        tbody.appendChild(noResultRow);
+    }
+
+    function setActiveCard(index) {
+        statCards.forEach(function (card, cardIndex) {
+            card.classList.toggle("stat-card-active", cardIndex === index);
+        });
+    }
+
+    function showAllDocuments() {
+        documentRows.forEach(function (row) {
+            row.classList.remove("document-filter-hidden");
+        });
+
+        noResultRow.classList.remove("show");
+        filterBar.classList.remove("show");
+        statCards.forEach(function (card) {
+            card.classList.remove("stat-card-active");
+        });
+    }
+
+    function filterDocuments(type, cardIndex, title) {
+
+        let visibleCount = 0;
+
+        documentRows.forEach(function (row) {
+
+            /*
+             * The existing empty-document row is not a real document.
+             * Keep it untouched.
+             */
+            if (row.querySelector(".empty")) {
+                row.classList.remove("document-filter-hidden");
+                return;
+            }
+
+            const statusElement = row.querySelector(".status");
+            const status = statusElement
+                ? statusElement.textContent.trim().toLowerCase()
+                : "";
+
+            let shouldShow = true;
+
+            if (type === "verified") {
+                shouldShow = status.includes("verified");
+            }
+
+            if (type === "rejected") {
+                shouldShow = status.includes("rejected");
+            }
+
+            /*
+             * Average Confidence shows the complete document list,
+             * because every document already has its confidence score
+             * in the existing table.
+             */
+            if (type === "confidence") {
+                shouldShow = true;
+            }
+
+            if (shouldShow) {
+                row.classList.remove("document-filter-hidden");
+                visibleCount++;
+            } else {
+                row.classList.add("document-filter-hidden");
+            }
+        });
+
+        filterTitle.textContent = title + " — " + visibleCount + " document(s)";
+        filterBar.classList.add("show");
+        setActiveCard(cardIndex);
+
+        if (visibleCount === 0) {
+            noResultRow.classList.add("show");
+        } else {
+            noResultRow.classList.remove("show");
+        }
+
+        filterBar.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    }
+
+    /*
+     * Total Documents
+     */
+    if (statCards[0]) {
+        statCards[0].addEventListener("click", function () {
+            filterDocuments("all", 0, "All Documents");
+        });
+    }
+
+    /*
+     * Verified Documents
+     */
+    if (statCards[1]) {
+        statCards[1].addEventListener("click", function () {
+            filterDocuments("verified", 1, "Verified Documents");
+        });
+    }
+
+    /*
+     * Rejected Documents
+     */
+    if (statCards[2]) {
+        statCards[2].addEventListener("click", function () {
+            filterDocuments("rejected", 2, "Rejected Documents");
+        });
+    }
+
+    /*
+     * Average Confidence
+     */
+    if (statCards[3]) {
+        statCards[3].addEventListener("click", function () {
+            filterDocuments("confidence", 3, "Documents by Confidence");
+        });
+    }
+
+    clearButton.addEventListener("click", function () {
+        showAllDocuments();
+
+        documentsBox.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    });
+
+});
+</script>
+
+
+<!-- ============================================================
+     ADDED FEATURE: ACTIVITY TIMELINE
+     Existing dashboard sections remain unchanged.
+     ============================================================ -->
+
+
+
+
+<script>
+/* ============================================================
+   ADDED FEATURE: LIVE NOTIFICATIONS + ACTIVITY TIMELINE
+   Existing dashboard JavaScript remains untouched.
+   ============================================================ */
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const notificationDropdown =
+        document.getElementById("notificationDropdown");
+
+    const notificationList =
+        notificationDropdown
+        ? notificationDropdown.querySelector(".notification-list")
+        : null;
+
+    const notificationBadge =
+        document.querySelector(".notification-badge");
+
+    const activityList =
+        document.getElementById("activityList");
+
+    const activityRefreshButton =
+        document.getElementById("activityRefreshButton");
+
+
+    function escapeHtml(value) {
+        const div = document.createElement("div");
+        div.textContent = value == null ? "" : String(value);
+        return div.innerHTML;
+    }
+
+
+    function getNotificationIcon(type) {
+
+        if (type === "success") {
+            return {
+                icon: "bi-check-circle-fill",
+                className: "success"
+            };
+        }
+
+        if (type === "danger") {
+            return {
+                icon: "bi-x-circle-fill",
+                className: "danger"
+            };
+        }
+
+        if (type === "warning") {
+            return {
+                icon: "bi-exclamation-triangle-fill",
+                className: ""
+            };
+        }
+
+        return {
+            icon: "bi-bell-fill",
+            className: ""
+        };
+    }
+
+
+    function updateNotificationBadge(count) {
+
+        if (!notificationBadge) {
+            return;
+        }
+
+        if (count > 0) {
+            notificationBadge.textContent =
+                count > 9 ? "9+" : String(count);
+
+            notificationBadge.style.display = "flex";
+        } else {
+            notificationBadge.textContent = "";
+            notificationBadge.style.display = "none";
+        }
+    }
+
+
+    async function loadLiveNotifications() {
+
+        if (!notificationList) {
+            return;
+        }
+
+        try {
+
+            const response =
+                await fetch("/api/notifications", {
+                    method: "GET",
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                    cache: "no-store"
+                });
+
+            if (!response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+
+            updateNotificationBadge(
+                Number(data.unread_count || 0)
+            );
+
+            const notifications =
+                Array.isArray(data.notifications)
+                ? data.notifications
+                : [];
+
+
+            if (!notifications.length) {
+
+                notificationList.innerHTML = `
+                    <div class="extra-notification-empty">
+                        <i class="bi bi-bell-slash"
+                           style="font-size:22px;display:block;margin-bottom:7px;">
+                        </i>
+                        No notifications yet
+                    </div>
+                `;
+
+                return;
+            }
+
+
+            let html = "";
+
+            notifications.forEach(function (item) {
+
+                const icon =
+                    getNotificationIcon(item.type);
+
+                const readClass =
+                    item.is_read
+                    ? "live-notification-read"
+                    : "";
+
+
+                html += `
+                    <div class="extra-notification-item ${readClass}"
+                         data-notification-id="${escapeHtml(item.id)}">
+
+                        <div class="extra-notification-icon ${icon.className}">
+                            <i class="bi ${icon.icon}"></i>
+                        </div>
+
+                        <div class="extra-notification-text">
+
+                            <strong>
+                                ${escapeHtml(item.title)}
+                            </strong>
+
+                            <span>
+                                ${escapeHtml(item.message)}
+                            </span>
+
+                            <small class="extra-notification-time">
+                                ${escapeHtml(item.created_at || "")}
+                            </small>
+
+                        </div>
+
+                    </div>
+                `;
+            });
+
+
+            html += `
+                <div style="
+                    padding:10px 15px;
+                    border-top:1px solid #eef0f4;
+                    text-align:right;
+                ">
+                    <button type="button"
+                            class="notification-mark-all"
+                            id="notificationMarkAll">
+                        <i class="bi bi-check2-all me-1"></i>
+                        Mark all as read
+                    </button>
+                </div>
+            `;
+
+
+            notificationList.innerHTML = html;
+
+
+            document
+                .querySelectorAll(
+                    ".extra-notification-item[data-notification-id]"
+                )
+                .forEach(function (item) {
+
+                    item.addEventListener("click", async function () {
+
+                        const id =
+                            this.getAttribute(
+                                "data-notification-id"
+                            );
+
+                        if (!id) {
+                            return;
+                        }
+
+                        try {
+
+                            await fetch(
+                                "/api/notifications/read/" +
+                                encodeURIComponent(id),
+                                {
+                                    method: "POST",
+                                    headers: {
+                                        "X-Requested-With":
+                                            "XMLHttpRequest"
+                                    }
+                                }
+                            );
+
+                            this.classList.add(
+                                "live-notification-read"
+                            );
+
+                            loadLiveNotifications();
+
+                        } catch (error) {
+                            console.log(
+                                "Notification read error:",
+                                error
+                            );
+                        }
+                    });
+                });
+
+
+            const markAll =
+                document.getElementById(
+                    "notificationMarkAll"
+                );
+
+
+            if (markAll) {
+
+                markAll.addEventListener(
+                    "click",
+                    async function (event) {
+
+                        event.stopPropagation();
+
+                        try {
+
+                            await fetch(
+                                "/api/notifications/read-all",
+                                {
+                                    method: "POST",
+                                    headers: {
+                                        "X-Requested-With":
+                                            "XMLHttpRequest"
+                                    }
+                                }
+                            );
+
+                            loadLiveNotifications();
+
+                        } catch (error) {
+
+                            console.log(
+                                "Mark all error:",
+                                error
+                            );
+                        }
+                    }
+                );
+            }
+
+        } catch (error) {
+
+            console.log(
+                "Notification loading error:",
+                error
+            );
+        }
+    }
+
+
+    function getActivityIcon(action) {
+
+        const value =
+            String(action || "").toLowerCase();
+
+        if (value.includes("upload")) {
+            return {
+                icon: "bi-cloud-arrow-up-fill",
+                className: "success"
+            };
+        }
+
+        if (value.includes("delete")) {
+            return {
+                icon: "bi-trash3-fill",
+                className: "danger"
+            };
+        }
+
+        if (value.includes("profile photo")) {
+            return {
+                icon: "bi-person-circle",
+                className: ""
+            };
+        }
+
+        if (value.includes("profile")) {
+            return {
+                icon: "bi-person-check-fill",
+                className: "success"
+            };
+        }
+
+        return {
+            icon: "bi-activity",
+            className: ""
+        };
+    }
+
+
+    async function loadActivityTimeline() {
+
+        if (!activityList) {
+            return;
+        }
+
+        try {
+
+            const response =
+                await fetch(
+                    "/api/activity?limit=20",
+                    {
+                        method: "GET",
+                        headers: {
+                            "X-Requested-With":
+                                "XMLHttpRequest"
+                        },
+                        cache: "no-store"
+                    }
+                );
+
+
+            if (!response.ok) {
+
+                activityList.innerHTML = `
+                    <div class="activity-empty">
+                        <i class="bi bi-exclamation-circle"></i>
+                        Unable to load activity.
+                    </div>
+                `;
+
+                return;
+            }
+
+
+            const data =
+                await response.json();
+
+            const activities =
+                Array.isArray(data.activities)
+                ? data.activities
+                : [];
+
+
+            if (!activities.length) {
+
+                activityList.innerHTML = `
+                    <div class="activity-empty">
+                        <i class="bi bi-clock-history"></i>
+                        No activity yet.
+                        <div style="margin-top:4px;">
+                            Your recent actions will appear here.
+                        </div>
+                    </div>
+                `;
+
+                return;
+            }
+
+
+            let html = "";
+
+
+            activities.forEach(function (item) {
+
+                const icon =
+                    getActivityIcon(item.action);
+
+
+                html += `
+                    <div class="activity-item">
+
+                        <div class="activity-line"></div>
+
+                        <div class="activity-dot ${icon.className}">
+                            <i class="bi ${icon.icon}"></i>
+                        </div>
+
+                        <div class="activity-content">
+
+                            <div class="activity-action">
+                                ${escapeHtml(item.action)}
+                            </div>
+
+                            <div class="activity-description">
+                                ${escapeHtml(item.description)}
+                            </div>
+
+                            <div class="activity-time">
+                                <i class="bi bi-clock me-1"></i>
+                                ${escapeHtml(item.created_at || "")}
+                            </div>
+
+                        </div>
+
+                    </div>
+                `;
+            });
+
+
+            activityList.innerHTML = html;
+
+        } catch (error) {
+
+            console.log(
+                "Activity loading error:",
+                error
+            );
+
+            activityList.innerHTML = `
+                <div class="activity-empty">
+                    <i class="bi bi-exclamation-circle"></i>
+                    Unable to load activity.
+                </div>
+            `;
+        }
+    }
+
+
+    /*
+     * Load both features immediately when dashboard opens.
+     */
+    loadLiveNotifications();
+    loadActivityTimeline();
+
+
+    /*
+     * Refresh Activity Timeline button.
+     */
+    if (activityRefreshButton) {
+
+        activityRefreshButton.addEventListener(
+            "click",
+            function () {
+
+                const original =
+                    this.innerHTML;
+
+                this.innerHTML =
+                    '<i class="bi bi-arrow-repeat me-1"></i> Loading...';
+
+                loadActivityTimeline().finally(
+                    function () {
+
+                        if (activityRefreshButton) {
+                            activityRefreshButton.innerHTML =
+                                original;
+                        }
+                    }
+                );
+            }
+        );
+    }
+
+
+    /*
+     * Refresh notification count/content periodically.
+     * This keeps the bell updated after document actions.
+     */
+    setInterval(
+        loadLiveNotifications,
+        15000
+    );
+
+});
+</script>
+
+
+
+
+<script>
+/* ============================================================
+   ADDED FEATURE: DUPLICATE + RISK SCORE
+   ============================================================ */
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const intelligenceList =
+        document.getElementById(
+            "intelligenceList"
+        );
+
+    const duplicateCount =
+        document.getElementById(
+            "duplicateCount"
+        );
+
+    const highRiskCount =
+        document.getElementById(
+            "highRiskCount"
+        );
+
+    const lowRiskCount =
+        document.getElementById(
+            "lowRiskCount"
+        );
+
+    const refreshButton =
+        document.getElementById(
+            "intelligenceRefresh"
+        );
+
+
+    function escapeIntelligenceHtml(value) {
+
+        const div =
+            document.createElement("div");
+
+        div.textContent =
+            value == null
+            ? ""
+            : String(value);
+
+        return div.innerHTML;
+    }
+
+
+    function riskClass(level) {
+
+        if (level === "High Risk") {
+            return "risk-high";
+        }
+
+        if (level === "Medium Risk") {
+            return "risk-medium";
+        }
+
+        return "risk-low";
+    }
+
+
+    async function loadDocumentIntelligence() {
+
+        if (!intelligenceList) {
+            return;
+        }
+
+        try {
+
+            const response =
+                await fetch(
+                    "/api/document-intelligence",
+                    {
+                        method:"GET",
+                        headers:{
+                            "X-Requested-With":
+                                "XMLHttpRequest"
+                        },
+                        cache:"no-store"
+                    }
+                );
+
+
+            if (!response.ok) {
+
+                intelligenceList.innerHTML = `
+                    <div class="intelligence-empty">
+                        <i class="bi bi-exclamation-circle"
+                           style="font-size:28px;display:block;margin-bottom:7px;">
+                        </i>
+                        Unable to analyze documents.
+                    </div>
+                `;
+
+                return;
+            }
+
+
+            const data =
+                await response.json();
+
+            duplicateCount.textContent =
+                data.duplicate_count || 0;
+
+            highRiskCount.textContent =
+                data.high_risk_count || 0;
+
+            lowRiskCount.textContent =
+                data.low_risk_count || 0;
+
+
+            const documents =
+                Array.isArray(data.documents)
+                ? data.documents
+                : [];
+
+
+            if (!documents.length) {
+
+                intelligenceList.innerHTML = `
+                    <div class="intelligence-empty">
+                        <i class="bi bi-file-earmark-check"
+                           style="font-size:28px;display:block;margin-bottom:7px;">
+                        </i>
+                        Upload a document to see its risk analysis.
+                    </div>
+                `;
+
+                return;
+            }
+
+
+            let html = "";
+
+
+            documents.forEach(function (doc) {
+
+                const risk =
+                    Number(doc.risk_score || 0)
+                    .toFixed(0);
+
+                const level =
+                    doc.risk_level ||
+                    "Low Risk";
+
+
+                const duplicate =
+                    doc.duplicate
+                    ? `
+                        <span class="duplicate-badge">
+                            <i class="bi bi-copy"></i>
+                            Possible Duplicate
+                        </span>
+                      `
+                    : "";
+
+
+                html += `
+                    <div
+                        class="intelligence-row"
+                        data-document-id="${escapeIntelligenceHtml(doc.id)}">
+
+                        <div class="intelligence-file">
+
+                            <strong>
+                                ${escapeIntelligenceHtml(doc.filename)}
+                            </strong>
+
+                            <span>
+                                ${escapeIntelligenceHtml(doc.document_type || "Document")}
+                                · Confidence:
+                                ${escapeIntelligenceHtml(doc.confidence_score || 0)}%
+                            </span>
+
+                        </div>
+
+
+                        <span class="risk-badge ${riskClass(level)}">
+
+                            <i class="bi bi-shield-fill-check"></i>
+
+                            ${escapeIntelligenceHtml(level)}
+                            · ${risk}%
+
+                        </span>
+
+
+                        ${duplicate}
+
+                    </div>
+                `;
+            });
+
+
+            intelligenceList.innerHTML =
+                html;
+
+        } catch (error) {
+
+            console.log(
+                "Document intelligence error:",
+                error
+            );
+
+            intelligenceList.innerHTML = `
+                <div class="intelligence-empty">
+                    <i class="bi bi-exclamation-circle"
+                       style="font-size:28px;display:block;margin-bottom:7px;">
+                    </i>
+                    Analysis temporarily unavailable.
+                </div>
+            `;
+        }
+    }
+
+
+    loadDocumentIntelligence();
+
+
+    if (refreshButton) {
+
+        refreshButton.addEventListener(
+            "click",
+            async function () {
+
+                const original =
+                    this.innerHTML;
+
+                this.innerHTML =
+                    '<i class="bi bi-arrow-repeat me-1"></i> Analyzing...';
+
+                await loadDocumentIntelligence();
+
+                this.innerHTML =
+                    original;
+            }
+        );
+    }
+
+});
+</script>
+
+
+<script>
+/* ============================================================
+   ADDED FEATURE: DASHBOARD SIGNATURE SECURITY DATA
+   ============================================================ */
+document.addEventListener("DOMContentLoaded", function () {
+    fetch("/api/signature-summary", {cache:"no-store"})
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) return;
+            const set = (id, value) => { const el=document.getElementById(id); if(el) el.textContent=value ?? 0; };
+            set("dashSigProfiles", data.profile_count);
+            set("dashSigSamples", data.sample_count);
+            set("dashSigVerified", data.verified);
+            set("dashSigSuspicious", data.suspicious);
+            const alert = document.getElementById("dashSigAlert");
+            if (!alert) return;
+            if (!data.engine_available) {
+                alert.innerHTML = '<span style="color:#856404;">Signature engine is not installed yet. Add OpenCV + NumPy to enable comparison.</span>';
+            } else if ((data.suspicious || 0) > 0) {
+                alert.innerHTML = '<span style="color:#842029;font-weight:600;"><i class="bi bi-exclamation-triangle me-1"></i>Possible forged signatures detected. Review them in the Verification Center.</span>';
+            } else if ((data.review || 0) > 0) {
+                alert.innerHTML = '<span style="color:#664d03;font-weight:600;"><i class="bi bi-eye me-1"></i>Some signatures need manual review.</span>';
+            } else {
+                alert.innerHTML = '<span style="color:#0f5132;font-weight:600;"><i class="bi bi-shield-check me-1"></i>No possible forgery flagged in recent checks.</span>';
+            }
+        })
+        .catch(() => {});
+});
+</script>
+
+</body>
+</html>
